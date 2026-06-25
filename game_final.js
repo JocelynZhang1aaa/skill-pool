@@ -44,7 +44,15 @@ const BOT_PROFILES = {
   xiaomai: {
     id:'xiaomai', name:'小麦', emoji:'🌾',
     skill: { angle_precision:0.50, safety:0.20, power_min:0.30, power_max:0.75 },
-    win_rate: 0.50
+    win_rate: 0.50,
+    // 立绘（按情绪切换）
+    avatars: {
+      idle:  './assets/xiaomai-happy.png',  // 默认 / 待机
+      happy: './assets/xiaomai-happy.png',  // 开心（进球/夸赞）
+      cute:  './assets/xiaomai-cute.png',   // 卖萌/撒娇
+      smug:  './assets/xiaomai-smug.png',   // 得瑟（嘲讽/赢）
+      pout:  './assets/xiaomai-pout.png'    // 委屈嘟嘴（输/自己犯规）
+    }
   },
   xien: {
     id:'xien', name:'席恩', emoji:'🌙',
@@ -55,6 +63,164 @@ const BOT_PROFILES = {
     id:'daike', name:'代柯', emoji:'🔥',
     skill: { angle_precision:0.65, safety:0.10, power_min:0.40, power_max:0.92 },
     win_rate: 0.58
+  }
+};
+
+/* ================================================================
+   1b. 角色台词 + 语音
+   ================================================================ */
+const VOICE_LINES = {
+  xiaomai: {
+    // ===== 嘲讽（贱萌+网络梗）×10 =====
+    taunt: [
+      '就这？我还以为你有多厉害呢~结果你是在给我表演杂技吗😂',
+      '哈哈哈哈这杆走位，你是想让我笑死好继承我的奶茶吗？',
+      '白球都进袋了诶……你要不要我给你整个《桌球入门》PDF？',
+      '你这走位挺有创意的，属于那种"我没想到你会这么打"的创意',
+      '我闭着眼都能比你打得好，真的，我不夸张',
+      '哎呀又给我送分了，那我可就不客气啦~',
+      '你这杆打得……怎么说呢，很有个人风格（bushi',
+      '不是吧阿Sir，这都能打丢？我直接一个好家伙',
+      '你这准头……建议去挂个眼科，我帮你挂号',
+      '笑死，这杆打得比我奶奶打麻将还随意',
+    ],
+    // ===== 撒娇/卖萌 ×10 =====
+    cute: [
+      '喂喂喂！人家明明很认真在打了好不好🥺不许笑！',
+      '哼……等下我赢了你请我喝奶茶，要全糖去冰的那种！',
+      '你是不是背着我偷偷练了？感觉你今天有点东西啊',
+      '打得好！——等等，我刚才是在夸我还是夸我自己来着？',
+      '其实我觉得你刚才那杆……也还行吧（小声）',
+      '能不能稍微让我一下下？就一下下嘛~不然我很没面子的诶',
+      '你看我都让你这么多球了，你也让让我嘛好不好',
+      '人家才没有紧张呢！只是……手心出了点汗而已',
+      '哼，你今天状态也太好了吧，是不是开挂了啊喂',
+      '好吧好吧算你厉害，但下次可不一定了哦',
+    ],
+    // ===== 夸赞 ×10 =====
+    praise: [
+      '哇哦这杆可以啊！走位很丝滑嘛，有点东西的',
+      '不错不错，看来你不是纯靠颜值吃饭的人呢~',
+      '这K球做得挺到位的诶，夸你一句（仅此一次',
+      '行啊你！进步很大嘛，我都开始紧张了',
+      '这杆打得……好吧我承认，确实有点帅',
+      '嗯~这个角度选得不错嘛，学得很快呀',
+      '可以啊这力度控制，比上次强了不止一点点',
+      '这走位绝了，你是偷偷看了教学视频吗',
+      '稳准狠！今天这是开了什么buff啊',
+      '不错不错，继续保持这个水平哦~',
+    ],
+    // ===== 赢了 ×10 =====
+    on_win: [
+      '耶！！我赢了！！快说小麦最厉害！快说！！',
+      '哼哼~赢了就是赢了，不服？不服憋着（叉腰）',
+      '小意思啦~不过你打得也不差啦，下次再接再厉',
+      '赢了！今晚必须加餐！我要吃两份炸鸡！',
+      '这就是实力的证明✨ 感谢对手的精彩表现（指送分）',
+      '哈哈哈哈赢了！感觉今天的运气都在我这边',
+      '赢了赢了！你要不要来拜我为师啊？打八折哦',
+      '耶！本小姐的桌球技术果然天下无敌！',
+      '赢啦~不过说实话你今天也打得挺好的（小声）',
+      '胜利属于小麦！不接受反驳！',
+    ],
+    // ===== 输了 ×10 =====
+    on_lose: [
+      '……你绝对作弊了吧？？不算不算这局不算！',
+      '再来一局！刚才那是手滑，手滑懂吗！！',
+      '你运气好的原因罢了，下次我可不会这么温柔了',
+      '呜……好吧你赢了，但是！但是我刚才明显状态不好！',
+      '哼，让你一局而已，别得意太早啊喂',
+      '这局是战略性失败！战略性的！懂吗！',
+      '……行吧你赢了。但是下一局我绝对不会输的！',
+      '肯定是桌子不平！不然我怎么会输给你！',
+      '算了算了，胜败乃兵家常事……但我还是不服！',
+      '你也就赢这一次而已，别高兴得太早哼',
+    ],
+    // ===== 玩家犯规 ×10 =====
+    on_player_foul: [
+      '哦豁~犯规了犯规了！白球都哭了你知道吗😂',
+      '哎呀母球进袋了……它是不是觉得你的技术配不上它？',
+      '犯规咯~按规则换我来打，那我就……勉为其难收下这个福利吧',
+      '空杆？！你是来打球的还是来给白球做按摩的？',
+      '犯规了哦亲~这下轮到我表演了，请准备好掌声👏',
+      '哇哦犯规了！这下换我了嘿嘿嘿',
+      '哎呀，白球都进去了……它可能想换个主人',
+      '犯规！裁判！他犯规了！（虽然我就是裁判）',
+      '你这犯规犯得很有艺术感啊，我给满分💯',
+      '好了好了犯规了别难过，来我教你正确的打开方式',
+    ],
+    // ===== 自己犯规 ×10 =====
+    on_bot_foul: [
+      '咳咳……刚才那杆当我没打过，系统bug，绝对是bug',
+      '手滑了手滑了！这不怪我，怪重力！',
+      '啊这……那个，我刚刚在想今晚吃什么来着',
+      '犯规是犯规我声明一下：我不是菜，我是有个性',
+      '好吧我承认这杆打得离谱……但你也不许笑啊！！',
+      '这个……刚才有只蚊子干扰了我的发挥！真的！',
+      '犯规了怎么了！大不了……大不了下杆好好打呗',
+      '谁还没个失误时候嘛，这不叫犯规这叫艺术发挥',
+      '哎呀手抖了一下……就一下下而已！',
+      '犯规归犯规但你不能因此质疑我的实力啊喂！',
+    ],
+  }
+};
+
+// 真人语音文件 — 7 类全覆盖（共 32 条），text 用于同步显示字幕气泡
+const VOICE_CLIPS = {
+  xiaomai: {
+    // 嘲讽（玩家失误 / 小麦连杆时挑衅）
+    taunt: [
+      { audio:'./assets/voice/xiaomai/taunt_01_yanke.mp3',  text:'你这准头，建议去挂下眼科' },
+      { audio:'./assets/voice/xiaomai/taunt_02_biyan.wav',  text:'哈哈哈哈，我闭着眼都能比你打得好，真的' },
+      { audio:'./assets/voice/xiaomai/taunt_03_songfen.wav',text:'哎呀又给我送分了，那我可就不客气啦~' },
+      { audio:'./assets/voice/xiaomai/taunt_04_fengge.wav', text:'你这杆打得，怎么说呢，很有个人风格' },
+      { audio:'./assets/voice/xiaomai/taunt_05_dadiu.wav',  text:'不是吧，这都能打丢？' },
+    ],
+    // 卖萌/撒娇（小麦没进球 / 落后时）
+    cute: [
+      { audio:'./assets/voice/xiaomai/cute_01_renzhen.wav',  text:'喂喂喂！人家明明很认真在打了好不好' },
+      { audio:'./assets/voice/xiaomai/cute_02_naicha.wav',   text:'哼…等下我赢了你请我喝奶茶，要全糖去冰的那种' },
+      { audio:'./assets/voice/xiaomai/cute_03_toulian.wav',  text:'你是不是背着我偷偷练了？感觉你今天有点东西啊' },
+      { audio:'./assets/voice/xiaomai/cute_04_haixing.wav',  text:'其实我觉得你刚才那杆…也还行吧（小声）' },
+      { audio:'./assets/voice/xiaomai/cute_05_rangrang.wav', text:'能不能稍微让我一下下？就一下下嘛~' },
+    ],
+    // 夸赞（玩家打出好杆）
+    praise: [
+      { audio:'./assets/voice/xiaomai/praise_01_sihua.wav',   text:'哇哦这杆可以啊！走位很丝滑嘛，有点东西的' },
+      { audio:'./assets/voice/xiaomai/praise_02_miaozhun.wav',text:'这瞄准做得挺到位的诶' },
+      { audio:'./assets/voice/xiaomai/praise_03_jinbu.wav',   text:'行啊你！进步很大嘛，我都开始紧张了' },
+      { audio:'./assets/voice/xiaomai/praise_04_shuai.wav',   text:'这杆打得…好吧我承认，确实有点帅' },
+      { audio:'./assets/voice/xiaomai/praise_05_jiaodu.wav',  text:'嗯~这个角度选得不错嘛，学得很快呀' },
+      { audio:'./assets/voice/xiaomai/praise_06_lidu.wav',    text:'可以啊这力度控制，比上次强了不止一点点' },
+    ],
+    // 赢了（终局，小麦获胜）
+    on_win: [
+      { audio:'./assets/voice/xiaomai/win_01_zuilihai.wav', text:'耶！！我赢了！！快说小麦最厉害！' },
+      { audio:'./assets/voice/xiaomai/win_02_buchala.wav',  text:'你打得也不差啦，下次再接再厉' },
+      { audio:'./assets/voice/xiaomai/win_03_shili.wav',    text:'这就是实力的证明，感谢对手的精彩表现' },
+      { audio:'./assets/voice/xiaomai/win_04_fanbo.wav',    text:'胜利属于小麦！不接受反驳' },
+    ],
+    // 输了（终局，小麦落败）
+    on_lose: [
+      { audio:'./assets/voice/xiaomai/lose_01_zuobi.wav',   text:'…你绝对作弊了吧？？不算不算这局不算！' },
+      { audio:'./assets/voice/xiaomai/lose_02_shouhua.wav', text:'再来一局！刚才那是手滑，手滑懂吗' },
+      { audio:'./assets/voice/xiaomai/lose_03_rangju.wav',  text:'哼，让你一局而已，别得意太早啊喂' },
+    ],
+    // 玩家犯规
+    on_player_foul: [
+      { audio:'./assets/voice/xiaomai/pfoul_01_muqiu.wav',     text:'哎呀母球进袋了…它是不是觉得你的技术配不上它' },
+      { audio:'./assets/voice/xiaomai/pfoul_02_konggan.wav',   text:'空杆？！你是来打球的还是来给白球做按摩的？' },
+      { audio:'./assets/voice/xiaomai/pfoul_03_huanwo.wav',    text:'哇哦犯规了！这下换我了嘿嘿嘿' },
+      { audio:'./assets/voice/xiaomai/pfoul_04_huanzhuren.wav',text:'哎呀，白球都进去了…它可能想换个主人' },
+      { audio:'./assets/voice/xiaomai/pfoul_05_caipan.wav',    text:'犯规！裁判！他犯规了' },
+    ],
+    // 小麦自己犯规
+    on_bot_foul: [
+      { audio:'./assets/voice/xiaomai/bfoul_01_bug.wav',       text:'咳咳…刚才那杆当我没打过，系统bug，绝对是bug' },
+      { audio:'./assets/voice/xiaomai/bfoul_02_chishenme.wav', text:'啊这…那个，我刚刚在想今晚吃什么来着' },
+      { audio:'./assets/voice/xiaomai/bfoul_03_lipu.wav',      text:'好吧我承认这杆打得离谱…' },
+      { audio:'./assets/voice/xiaomai/bfoul_04_shoudou.wav',   text:'哎呀手抖了一下…' },
+    ],
   }
 };
 
@@ -219,6 +385,124 @@ const AudioFx = (() => {
 
 ['pointerdown','touchstart','click'].forEach(ev =>
   document.addEventListener(ev, ()=>AudioFx.init(), {once:true, passive:true}));
+
+/* ================================================================
+   4b. CHARACTER — 小麦立绘 / 气泡台词 / 真人语音
+   ================================================================ */
+const Character = (() => {
+  let _audio = null;       // 当前播放的语音
+  let _bubbleTimer = null;
+  let _moodTimer = null;
+  let _muted = false;
+  // 冷却控制：避免连珠炮
+  let _lastBubbleAt = 0;
+  let _lastVoiceAt  = 0;
+  const BUBBLE_COOLDOWN = 4500;   // 两次气泡至少间隔 4.5s
+  const VOICE_COOLDOWN  = 9000;   // 两次真人语音至少间隔 9s（每类都有语音了，可适当放宽频率）
+
+  // 防重复：记录每个分类上一次抽到的索引，避免同一局连续触发同一条
+  const _lastIdx = {};
+  // 从数组里随机取一条，但不与该分类上一次相同（数组长度>1 时）
+  function pickNoRepeat(arr, key){
+    if (!arr || !arr.length) return undefined;
+    if (arr.length === 1) return arr[0];
+    let i, guard = 0;
+    do { i = (Math.random()*arr.length)|0; guard++; }
+    while (i === _lastIdx[key] && guard < 12);
+    _lastIdx[key] = i;
+    return arr[i];
+  }
+  // 新一局重置防重复记录（避免跨局还记着上一局最后一条）
+  function resetRepeat(){ for (const k in _lastIdx) delete _lastIdx[k]; }
+
+  function pick(arr){ return arr[(Math.random()*arr.length)|0]; }
+
+  // 切换立绘表情；duration 后回到 idle
+  function setMood(mood, holdMs = 3500){
+    const img = document.getElementById('char-avatar');
+    const prof = State.botProfile;
+    if (!img || !prof || !prof.avatars) return;
+    const src = prof.avatars[mood] || prof.avatars.idle;
+    if (src && img.getAttribute('src') !== src) img.setAttribute('src', src);
+    clearTimeout(_moodTimer);
+    if (holdMs > 0){
+      _moodTimer = setTimeout(()=> setMood('idle', 0), holdMs);
+    }
+  }
+
+  // 显示台词气泡（带冷却）
+  function showBubble(text, holdMs = 3200, force = false){
+    const stage = document.getElementById('char-stage');
+    const bubble = document.getElementById('char-bubble');
+    if (!stage || !bubble || !text) return false;
+    const now = Date.now();
+    if (!force && now - _lastBubbleAt < BUBBLE_COOLDOWN) return false;
+    _lastBubbleAt = now;
+    bubble.textContent = text;
+    stage.classList.add('talking');
+    clearTimeout(_bubbleTimer);
+    _bubbleTimer = setTimeout(()=>{
+      stage.classList.remove('talking');
+    }, holdMs);
+    return true;
+  }
+
+  // 播放真人语音（带冷却；force 越过冷却用于终局）
+  function playClip(clip, force = false){
+    if (_muted || !clip || !clip.audio) return false;
+    const now = Date.now();
+    if (!force && now - _lastVoiceAt < VOICE_COOLDOWN) return false;
+    try {
+      if (_audio){ _audio.pause(); _audio = null; }
+      _audio = new Audio(clip.audio);
+      _audio.volume = 0.95;
+      _audio.play().catch(()=>{}); // 自动播放可能被拦，静默失败
+      _lastVoiceAt = now;
+      return true;
+    } catch(e){ return false; }
+  }
+
+  /**
+   * 角色"说话"——语音优先：切表情 +（冷却内才）播真人语音 + 同步字幕气泡
+   * @param {string} category   分类（taunt/cute/praise/on_win/on_lose/on_player_foul/on_bot_foul）
+   * @param {string} mood       立绘表情（smug/happy/cute/pout）
+   * @param {object} opts
+   *   - voiceChance {number}  尝试播语音的概率 0~1（默认 1，必尝试；受冷却约束）
+   *   - bubble {boolean}      语音被冷却挡下时，是否退化为纯文字气泡（默认 false，安静）
+   *   - force {boolean}       忽略所有冷却（终局等关键时刻必出语音+字幕）
+   */
+  function say(category, mood = 'idle', opts = {}){
+    const id = State.botProfile && State.botProfile.id;
+    if (id !== 'xiaomai') return;  // 目前只有小麦有素材
+
+    const { voiceChance = 1, bubble = false, force = false } = opts;
+
+    // 表情总是切换（纯视觉反馈，不吵）
+    setMood(mood, 3800);
+
+    // 语音优先：命中概率 + 冷却通过 → 播音频 + 显示对应字幕
+    const clips = (VOICE_CLIPS[id] && VOICE_CLIPS[id][category]) || [];
+    if (clips.length && (force || Math.random() < voiceChance)){
+      const clip = pickNoRepeat(clips, id + ':v:' + category);
+      if (playClip(clip, force)){
+        showBubble(clip.text, 4400, force);
+        return;
+      }
+    }
+
+    // 语音被冷却挡下：默认安静（只留表情）；显式允许时退化为文字气泡
+    if (bubble){
+      const lines = (VOICE_LINES[id] && VOICE_LINES[id][category]) || [];
+      if (lines.length) showBubble(pickNoRepeat(lines, id + ':t:' + category), 3400, force);
+    }
+  }
+
+  function toggleMute(){ _muted = !_muted; if (_muted && _audio){ _audio.pause(); } return _muted; }
+
+  return { say, setMood, showBubble, toggleMute, resetRepeat };
+})();
+// 暴露到 window，便于静音开关 / 调试触发
+try { window.Character = Character; } catch(e){}
 
 /* ================================================================
    5. MATTER.JS ENGINE INIT
@@ -875,15 +1159,18 @@ function placeSpinDot(x,y){
   spinDot.style.top  = `calc(50% + ${y*usable}px)`;
 }
 
-// Cue ball reset
-$('#btn-cue-ball').addEventListener('click', ()=>{
-  if (State.turn!=='me'||State.ended) return;
-  if (State.phase==='SHOOTING'||State.phase==='LOCKED') return;
-  Body.setPosition(State.cue.body, {x:200,y:600});
-  Body.setVelocity(State.cue.body, {x:0,y:0});
-  Body.setAngularVelocity(State.cue.body, 0);
-  setPower(0); setPhase('IDLE');
-});
+// Cue ball reset (按钮已移除，保留判空避免脚本中断)
+const _cueBallBtn = $('#btn-cue-ball');
+if (_cueBallBtn){
+  _cueBallBtn.addEventListener('click', ()=>{
+    if (State.turn!=='me'||State.ended) return;
+    if (State.phase==='SHOOTING'||State.phase==='LOCKED') return;
+    Body.setPosition(State.cue.body, {x:200,y:600});
+    Body.setVelocity(State.cue.body, {x:0,y:0});
+    Body.setAngularVelocity(State.cue.body, 0);
+    setPower(0); setPhase('IDLE');
+  });
+}
 
 /* ================================================================
    11. SHOT EXECUTION
@@ -1388,16 +1675,25 @@ function resolveShot(){
     // 犯规 toast 已在第 1 步按"谁犯规"组装好
     showToast(foulToast, 'foul');
     State.runStreak[sideKey] = 0;
+    // 角色反应（犯规是"大事"，优先播语音；冷却挡下则退化为文字气泡）
+    if (me) Character.say('on_player_foul', 'smug', { voiceChance:1, bubble:true });  // 玩家犯规 → 挑衅
+    else    Character.say('on_bot_foul',    'pout', { voiceChance:1, bubble:true });  // 小麦犯规 → 找借口
     switchTurn(me ? 'bot' : 'me');
   } else if (pocketedOwn){
     // 进了自己球 → 续杆
     State.runStreak[sideKey] += 1;
     showToast(`${shooterName}进球了，继续击球`, 'ok');
+    // 角色反应：玩家进球 → 夸赞（60% 语音）；小麦进球 → 嘚瑟挑衅（70% 语音）
+    if (me) Character.say('praise', 'happy', { voiceChance:0.6 });
+    else    Character.say('taunt',  'smug',  { voiceChance:0.7 });
     continueTurn(me ? 'me' : 'bot');
   } else {
-    // 没进球 → 换手；说清楚轮到谁
+    // 没进球 → 换手
     State.runStreak[sideKey] = 0;
     showToast(`现在${nextTurnTip}`, 'info');
+    // 角色反应：玩家没进 → 小麦偶尔卖萌挑衅（35% 语音）；小麦自己没进 → 撒娇（35% 语音）
+    if (me) Character.say('taunt', 'smug', { voiceChance:0.35 });
+    else    Character.say('cute',  'cute', { voiceChance:0.35 });
     switchTurn(me ? 'bot' : 'me');
   }
 }
@@ -1568,7 +1864,7 @@ function showToast(msg, kind = 'info'){
   el.textContent = msg;
   el.style.cssText = [
     'color:#ffffff',
-    'font-size:13px', 'font-weight:400',
+    'font-size:11.5px', 'font-weight:400',
     'letter-spacing:0.3px',
     'line-height:1',
     // 弹幕轻阴影，保证在桌面/深色背景上都可读
@@ -1595,6 +1891,9 @@ function showToast(msg, kind = 'info'){
 function endMatch(result, reason){
   State.ended = true;
   State.result = result;
+  // 角色反应：玩家赢 = 小麦输（委屈）；玩家输 = 小麦赢（嘚瑟）。终局是大事，force 弹气泡
+  if (result === 'win') Character.say('on_lose', 'pout', { bubble:true, force:true });
+  else                  Character.say('on_win', 'smug', { bubble:true, force:true });
   const icon  = document.getElementById('game-over-icon');
   const title = document.getElementById('game-over-title');
   const rEl   = document.getElementById('game-over-reason');
@@ -1609,7 +1908,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240625p loaded');
+  console.log('[game_final.js] v=20240625w loaded');
   canvas = $('#table-canvas');
   if (canvas){
     ctx = canvas.getContext('2d');
@@ -1632,6 +1931,7 @@ function init(){
       _shotCtx = null; _stillFrames = 0; _settleGuard = false;
       if (!State.runStreak) State.runStreak = { me:0, bot:0 };
       initEngine(); setupRack(); updateTurnUI(); showGroupBanner();
+      Character.resetRepeat();  // 新一局清空语音防重复记录
       State.phase = 'IDLE'; redrawAim();
     });
   }
@@ -1648,6 +1948,7 @@ function init(){
   initEngine();
   setupRack();
   updateTurnUI();
+  Character.setMood('idle', 0);   // 初始化小麦立绘
   State.phase = 'IDLE';
   redrawAim();
   // 开局引导 toast（也用于确认 toast 显示位置正确）

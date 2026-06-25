@@ -101,7 +101,7 @@ html, body{
 }
 .hud-row{
   display: flex; align-items: center; gap: 8px;
-  height: 24px;
+  height: 22px;
 }
 .hud-label{
   font-size: 11px; font-weight: 600;
@@ -118,7 +118,7 @@ html, body{
 
 /* HUD 球槽（标准美式 8 球：solid 纯色带白带 / stripe 上下纯色中间白带 / 灰底未占位） */
 .slot{
-  width: 22px; height: 22px;
+  width: 20px; height: 20px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #2a334a 0%, #131a2a 75%);
   box-shadow:
@@ -153,14 +153,14 @@ html, body{
 .slot.solid::before{
   content: '';
   position: absolute;
-  width: 11px; height: 11px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: #fff;
 }
 .slot.solid::after{
   content: attr(data-num);
   position: relative;
-  font-size: 8px; font-weight: 800;
+  font-size: 7.5px; font-weight: 800;
   color: #1a1a1a;
   z-index: 1;
 }
@@ -176,11 +176,11 @@ html, body{
 .slot.stripe::after{
   content: attr(data-num);
   position: relative;
-  width: 11px; height: 11px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: #fff;
   display: grid; place-items: center;
-  font-size: 8px; font-weight: 800;
+  font-size: 7.5px; font-weight: 800;
   color: #1a1a1a;
   z-index: 1;
 }
@@ -190,14 +190,14 @@ html, body{
 }
 .slot.eight::before{
   content: ''; position: absolute;
-  width: 11px; height: 11px;
+  width: 10px; height: 10px;
   border-radius: 50%;
   background: #fff;
 }
 .slot.eight::after{
   content: '8';
   position: relative;
-  font-size: 8px; font-weight: 800;
+  font-size: 7.5px; font-weight: 800;
   color: #1a1a1a;
   z-index: 1;
 }
@@ -901,3 +901,86 @@ html, body{
   cursor: pointer;
 }
 .btn-game-cancel:active{ transform: scale(0.97); background: rgba(255,255,255,0.06); }
+
+/* =========================================
+   小麦立绘 + 气泡台词（右上角浮层）
+   ========================================= */
+.char-stage{
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  z-index: 7;
+  width: 73px;                /* 再缩小 5%：77 → 73 */
+  height: 97px;
+  pointer-events: none;       /* 不挡操作 */
+  overflow: visible;          /* 气泡可溢出容器向左展开 */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+.char-avatar{
+  width: 73px;                /* 再缩小 5% */
+  height: auto;
+  max-height: 97px;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
+  transform: translateY(2px) scale(1);
+  transform-origin: bottom right;
+  transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+}
+/* 说话时立绘轻微"探头" */
+.char-stage.talking .char-avatar{
+  transform: translateY(-2px) scale(1.06);
+}
+
+/* 台词气泡：黑描边漫画对话框（参考用户提供样式），从立绘左侧弹出 */
+.char-bubble{
+  position: absolute;
+  right: 64px;               /* 贴在立绘左边（跟随立绘缩小） */
+  top: 14px;
+  width: max-content;        /* 按内容自适应宽度，避免被父容器挤成竖排 */
+  max-width: 176px;          /* 上限，超出才换行（缩小） */
+  min-width: 56px;
+  padding: 7px 11px;         /* 内边距收紧 */
+  background: #ffffff;
+  color: #1a1a1a;
+  font-size: 10.5px;         /* 文本缩小 */
+  line-height: 1.4;
+  font-weight: 600;
+  border: 2px solid #111;               /* 描边略细 */
+  border-radius: 16px;                  /* 圆角随之缩小 */
+  box-shadow: 0 3px 10px rgba(0,0,0,0.22);
+  opacity: 0;
+  transform: translateX(8px) scale(0.9);
+  transform-origin: right center;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+}
+/* 气泡尾巴（黑描边三角，指向右侧立绘）— 用两层三角叠出描边效果 */
+.char-bubble::before{
+  content: '';
+  position: absolute;
+  right: -11px;
+  bottom: 7px;
+  width: 0; height: 0;
+  border: 6px solid transparent;
+  border-left-color: #111;             /* 外层黑边 */
+}
+.char-bubble::after{
+  content: '';
+  position: absolute;
+  right: -6px;
+  bottom: 9px;
+  width: 0; height: 0;
+  border: 4px solid transparent;
+  border-left-color: #ffffff;          /* 内层白填充 */
+}
+.char-stage.talking .char-bubble{
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}

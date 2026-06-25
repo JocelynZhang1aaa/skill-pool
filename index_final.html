@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>桌球对局 · skill-pool v4 (final)</title>
-<link rel="stylesheet" href="./style_final.css" />
+<link rel="stylesheet" href="./style_final.css?v=20240625u" />
 </head>
 <body>
 
@@ -38,6 +38,12 @@
 
   <div class="turn-strip">
     <span class="turn-pill" id="turn-pill">你的回合</span>
+  </div>
+
+  <!-- 小麦立绘 + 气泡（右上角浮层） -->
+  <div class="char-stage" id="char-stage">
+    <div class="char-bubble" id="char-bubble"></div>
+    <img class="char-avatar" id="char-avatar" src="./assets/xiaomai-happy.png" alt="小麦" />
   </div>
 
   <main class="play-area">
@@ -154,6 +160,6 @@
 </div><!-- /.stage-frame -->
 
 <script src="./matter.min.js"></script>
-<script src="./game_final.js?v=20240625q"></script>
+<script src="./game_final.js?v=20240625w"></script>
 </body>
 </html>
