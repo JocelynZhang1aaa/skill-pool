@@ -1,0 +1,623 @@
+/* ==========================================================
+   pool-niubi · iMessage 桌球风（v4 修复版）
+   ========================================================== */
+
+:root{
+  --stage-w: 9;
+  --stage-h: 16;
+  --bg-app: #2a3450;
+  --bg-app-2: #232c44;
+  --felt: #2c7e9e;
+  --felt-2: #1f6280;
+  --felt-edge: #154860;
+  --wood-1: #6e4527;
+  --wood-2: #3d2615;
+  --wood-edge: #c89052;
+  --wood-light: #8a5a36;
+  --pocket: #0a0b0e;
+  --hud-bg: rgba(28, 36, 56, 0.86);
+  --hud-stroke: rgba(255,255,255,0.06);
+  --hud-text: #ecf0f6;
+  --hud-text-dim: #8a96aa;
+  --shadow-soft: 0 2px 8px rgba(0,0,0,0.4);
+  --bot-bubble-bg: rgba(20,24,32,0.88);
+  --accent-yellow: #ffce4a;
+  --accent-yellow-2: #f0a724;
+  --accent-blue: #4f7bff;
+  --accent-power: #7dd3ff;
+}
+
+*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body{
+  margin: 0; padding: 0; height: 100%;
+  font-family: -apple-system, "PingFang SC", "SF Pro Text", system-ui, sans-serif;
+  color: var(--hud-text);
+  background: #0a0c12;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* =========================================
+   9:16 舞台容器
+   ========================================= */
+.stage-frame{
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 0%, #1a2030 0%, #0a0c12 60%);
+}
+.stage{
+  position: relative;
+  height: min(100vh, calc(100vw * 16 / 9));
+  aspect-ratio: 9 / 16;
+  background: linear-gradient(180deg, var(--bg-app-2) 0%, var(--bg-app) 100%);
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  padding: 12px 10px 10px;
+  gap: 8px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 30px 80px rgba(0,0,0,0.6);
+}
+@media (max-aspect-ratio: 9/16){
+  .stage{ width: 100vw; height: calc(100vw * 16 / 9); border-radius: 0; }
+}
+@media (min-aspect-ratio: 9/16){
+  .stage{ width: calc(100vh * 9 / 16); height: 100vh; }
+}
+
+/* =========================================
+   顶部 HUD
+   ========================================= */
+.hud{
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px 6px 12px;
+}
+.hud-rows{
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--hud-bg);
+  border: 1px solid var(--hud-stroke);
+  border-radius: 22px;
+  padding: 8px 12px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-soft);
+}
+.hud-row{
+  display: flex; align-items: center; gap: 8px;
+  height: 24px;
+}
+.hud-label{
+  font-size: 11px; font-weight: 600;
+  color: var(--hud-text-dim);
+  flex: 0 0 auto;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.hud-balls{
+  list-style: none; margin: 0; padding: 0;
+  display: flex; gap: 4px; flex: 1;
+  justify-content: flex-start;
+}
+
+/* HUD 球槽 */
+.slot{
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #2a334a 0%, #131a2a 75%);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.08),
+    inset 0 -1px 1px rgba(0,0,0,0.5);
+  position: relative;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 800;
+  color: transparent;
+  flex: 0 0 auto;
+}
+.slot.solid,
+.slot.stripe{
+  background: var(--ball-color, #fff);
+  box-shadow:
+    inset -2px -3px 4px rgba(0,0,0,0.25),
+    inset 2px 2px 3px rgba(255,255,255,0.35);
+}
+.slot.solid::before{
+  content: '';
+  position: absolute;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #fff;
+}
+.slot.solid::after{
+  content: attr(data-num);
+  position: relative;
+  font-size: 8px; font-weight: 800;
+  color: #1a1a1a;
+  z-index: 1;
+}
+.slot.stripe{ background: #fff; }
+.slot.stripe::before{
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 30%; bottom: 30%;
+  background: var(--ball-color, #fff);
+}
+.slot.stripe::after{
+  content: attr(data-num);
+  position: relative;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid; place-items: center;
+  font-size: 8px; font-weight: 800;
+  color: #1a1a1a;
+  z-index: 1;
+}
+.slot.eight{
+  background: #1a1a1a;
+}
+.slot.eight::before{
+  content: ''; position: absolute;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  background: #fff;
+}
+.slot.eight::after{
+  content: '8';
+  position: relative;
+  font-size: 8px; font-weight: 800;
+  color: #1a1a1a;
+  z-index: 1;
+}
+
+/* 母球控制按钮 */
+.cue-ball-btn{
+  flex: 0 0 auto;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: none;
+  background:
+    radial-gradient(circle at 35% 30%, #ffffff 0%, #e3e8ee 75%, #c1c8d2 100%);
+  display: grid; place-items: center;
+  box-shadow:
+    inset -3px -4px 8px rgba(0,0,0,0.18),
+    inset 2px 3px 5px rgba(255,255,255,0.6),
+    0 4px 10px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.cue-ball-btn:active{ transform: scale(0.93); }
+.cue-ball-dot{
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6363 0%, #c92020 80%);
+  box-shadow: inset -1px -1px 2px rgba(0,0,0,0.3);
+}
+
+/* =========================================
+   回合提示
+   ========================================= */
+.turn-strip{
+  flex: 0 0 auto;
+  display: flex; justify-content: center;
+  height: 18px;
+}
+.turn-pill{
+  font-size: 11px; font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 10px;
+  background: rgba(74,210,106,0.18);
+  color: #6cdb83;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+}
+.turn-pill.bot-turn{
+  background: rgba(255,138,76,0.18);
+  color: #ffa970;
+}
+
+/* =========================================
+   中区：左侧球杆轨道 + 球桌
+   ========================================= */
+.play-area{
+  flex: 1 1 auto;
+  display: flex; align-items: stretch;
+  gap: 8px;
+  min-height: 0;
+  padding: 0 4px;
+}
+
+/* 左侧球杆轨道 */
+.cue-rail{
+  flex: 0 0 auto;
+  width: 38px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 6px 0 8px;
+  gap: 6px;
+}
+
+/* 旋按钮 */
+.spin-entry{
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--hud-text);
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.spin-entry:active{ background: rgba(255,255,255,0.14); }
+.spin-entry.active{
+  background: rgba(255,206,74,0.2);
+  color: var(--accent-yellow);
+  border-color: var(--accent-yellow);
+}
+
+/* 力度填充轨道 */
+.rail-track{
+  flex: 1;
+  width: 14px;
+  border-radius: 7px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+.rail-fill{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 0%;
+  background: linear-gradient(180deg, #b9e8ff 0%, #7dd3ff 50%, #4f9ed1 100%);
+  border-radius: 7px;
+  box-shadow: 0 0 12px rgba(125,211,255,0.5);
+  transition: height 0.05s linear;
+}
+
+/* 球杆视觉 */
+.rail-stick{
+  position: absolute;
+  left: 50%; top: 36px;
+  transform: translateX(-50%);
+  width: 18px;
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  z-index: 5;
+}
+.rail-stick:active{ cursor: grabbing; }
+.rail-stick-tip{
+  width: 6px; height: 16px;
+  background: linear-gradient(180deg, #e8ecf0 0%, #9aa3b0 100%);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.rail-stick-body{
+  width: 9px; min-height: 120px;
+  background: linear-gradient(180deg, #d4a860 0%, #a07840 35%, #7a5028 70%, #4a2810 100%);
+  border-radius: 1px;
+  box-shadow: 1px 0 0 rgba(255,255,255,0.12) inset, -1px 0 0 rgba(0,0,0,0.25) inset;
+  flex-shrink: 0;
+}
+.rail-stick-grip{
+  width: 12px; height: 38px;
+  background: linear-gradient(180deg, #1a0e08 0%, #0c0604 100%);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   球桌
+   ========================================= */
+.table-wrap{
+  flex: 1 1 auto;
+  position: relative;
+  display: grid; place-items: center;
+  min-height: 0; min-width: 0;
+}
+
+.table{
+  position: relative;
+  height: 100%;
+  aspect-ratio: 1 / 2;
+  max-width: 100%;
+  padding: 18px;
+  background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood-1) 50%, var(--wood-2) 100%);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 0 0 1px var(--wood-edge),
+    inset 0 0 0 2px rgba(0,0,0,0.4),
+    0 12px 30px rgba(0,0,0,0.6);
+}
+
+/* 木框钻石装饰 */
+.table::before, .table::after{
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 38%, transparent 42%);
+  background-size: 6px 6px;
+  background-repeat: repeat-x;
+}
+.table::before{
+  top: 24px; bottom: 24px;
+  left: 4px; width: 6px;
+  background-size: 6px calc(100% / 6);
+  background-repeat: repeat-y;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 22%, transparent 30%);
+}
+.table::after{
+  top: 24px; bottom: 24px;
+  right: 4px; width: 6px;
+  background-size: 6px calc(100% / 6);
+  background-repeat: repeat-y;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.7) 22%, transparent 30%);
+}
+
+/* 毛毡 */
+.felt{
+  position: relative;
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 50% 50%, var(--felt) 0%, var(--felt-2) 75%, var(--felt-edge) 100%);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 30px rgba(0,0,0,0.4),
+    inset 0 1px 2px rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+/* 库边白色三角顶角 */
+.felt::before, .felt::after{
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+.felt::before{
+  top: 0; left: 0; width: 100%; height: 28px;
+  background:
+    linear-gradient(135deg, #e8edf3 0%, #e8edf3 18px, transparent 18px) top left/50% 100% no-repeat,
+    linear-gradient(225deg, #e8edf3 0%, #e8edf3 18px, transparent 18px) top right/50% 100% no-repeat;
+}
+.felt::after{
+  bottom: 0; left: 0; width: 100%; height: 28px;
+  background:
+    linear-gradient(45deg, #e8edf3 0%, #e8edf3 18px, transparent 18px) bottom left/50% 100% no-repeat,
+    linear-gradient(-45deg, #e8edf3 0%, #e8edf3 18px, transparent 18px) bottom right/50% 100% no-repeat;
+}
+
+/* 6 个袋口 */
+.pocket{
+  position: absolute;
+  background: radial-gradient(circle at 50% 45%, #000 0%, #000 70%, transparent 75%);
+  z-index: 2;
+}
+.pocket-tl, .pocket-tr, .pocket-bl, .pocket-br{
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
+}
+.pocket-tl{ top: -4px; left: -4px; }
+.pocket-tr{ top: -4px; right: -4px; }
+.pocket-bl{ bottom: -4px; left: -4px; }
+.pocket-br{ bottom: -4px; right: -4px; }
+
+.pocket-ml, .pocket-mr{
+  top: 50%; transform: translateY(-50%);
+  width: 22px; height: 30px;
+}
+.pocket-ml{ left: -8px; background: radial-gradient(ellipse at 70% 50%, #000 0%, #000 60%, transparent 70%); }
+.pocket-mr{ right: -8px; background: radial-gradient(ellipse at 30% 50%, #000 0%, #000 60%, transparent 70%); }
+
+/* 库边垫 */
+.cushion{
+  position: absolute;
+  background: rgba(255,255,255,0.04);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.aim-layer, .balls-layer{
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 3;
+}
+.aim-layer{ pointer-events: none; }
+
+/* Canvas 球体渲染层 */
+#table-canvas{
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 3;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* =========================================
+   底部 dock
+   ========================================= */
+.dock{
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--hud-bg);
+  border: 1px solid var(--hud-stroke);
+  border-radius: 18px;
+  padding: 8px 14px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-soft);
+  height: 50px;
+}
+.dock-power{
+  flex: 1;
+  font-size: 13px; color: var(--hud-text-dim);
+  letter-spacing: 0.5px;
+}
+.dock-power b{
+  color: var(--accent-power);
+  font-weight: 800;
+  font-size: 16px;
+  margin: 0 2px;
+}
+.btn-shoot{
+  flex: 0 0 auto;
+  height: 36px; padding: 0 22px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--accent-yellow) 0%, var(--accent-yellow-2) 100%);
+  color: #2a1d05; font-weight: 800; font-size: 14px;
+  letter-spacing: 1px;
+  border: none;
+  box-shadow:
+    0 4px 12px rgba(240,167,36,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -2px 0 rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+.btn-shoot:active{ transform: scale(0.97); }
+.btn-shoot:disabled{
+  opacity: 0.45;
+  background: linear-gradient(180deg, #5a6275 0%, #3a4154 100%);
+  color: rgba(255,255,255,0.5);
+  box-shadow: none;
+}
+
+/* =========================================
+   PTT 按钮
+   ========================================= */
+.ptt-btn{
+  position: absolute;
+  left: 50%; bottom: 24px;
+  transform: translateX(-50%);
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #4a5666 0%, #2c3340 100%);
+  color: #fff;
+  border: 2px solid rgba(255,255,255,0.12);
+  display: grid; place-items: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  z-index: 30;
+  touch-action: none;
+}
+.ptt-btn.active{
+  background: linear-gradient(180deg, #ff5c5c 0%, #d63b3b 100%);
+  transform: translateX(-50%) scale(1.08);
+  box-shadow: 0 0 0 8px rgba(255,92,92,0.18), 0 4px 14px rgba(0,0,0,0.4);
+}
+
+/* =========================================
+   SPIN 模态
+   ========================================= */
+.spin-mask{ display: none; }
+.spin-mask.spin-active{
+  position: absolute; inset: 0;
+  background: rgba(8, 12, 22, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 70;
+  display: grid; place-items: center;
+  animation: bubble-in 0.22s ease;
+}
+.spin-wrap{
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  width: 100%; padding: 0 24px;
+}
+.spin-title{
+  font-size: 14px; font-weight: 700;
+  color: var(--hud-text-dim);
+  letter-spacing: 1px;
+}
+.spin-ball{
+  position: relative;
+  width: 70%; max-width: 260px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, #ffffff 0%, #f0f3f8 60%, #c1c8d2 100%);
+  box-shadow:
+    inset -8px -10px 20px rgba(0,0,0,0.18),
+    inset 5px 6px 14px rgba(255,255,255,0.7),
+    0 14px 40px rgba(0,0,0,0.6);
+  touch-action: none;
+}
+.spin-ball-shadow{
+  position: absolute; inset: 0; border-radius: 50%;
+  box-shadow: inset -16px -22px 36px rgba(0,0,0,0.12);
+  pointer-events: none;
+}
+.spin-ball-highlight{
+  position: absolute;
+  top: 12%; left: 18%;
+  width: 30%; height: 24%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 70%);
+  pointer-events: none;
+}
+.spin-dot{
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 14%; height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6363 0%, #c92020 80%);
+  box-shadow:
+    inset -2px -3px 5px rgba(0,0,0,0.3),
+    0 2px 6px rgba(180,30,30,0.5);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+}
+.spin-dot:active{ cursor: grabbing; }
+
+.spin-tip{
+  font-size: 12px; color: var(--hud-text-dim);
+  text-align: center; line-height: 1.5;
+  max-width: 260px;
+}
+.btn-spin-done{
+  height: 42px; padding: 0 32px;
+  border-radius: 21px;
+  border: none;
+  background: linear-gradient(180deg, var(--accent-yellow) 0%, var(--accent-yellow-2) 100%);
+  color: #2a1d05;
+  font-size: 14px; font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(240,167,36,0.4);
+  cursor: pointer;
+}
+
+/* =========================================
+   调试面板
+   ========================================= */
+.dev-panel{
+  position: absolute; right: 6px; top: 6px;
+  z-index: 40;
+  font-size: 11px; color: var(--hud-text-dim);
+  max-width: 180px;
+}
+.dev-panel details{ background: rgba(0,0,0,0.55); border-radius: 8px; padding: 4px 8px; backdrop-filter: blur(10px); }
+.dev-panel summary{ cursor: pointer; font-size: 10px; }
+.dev-row{ display: flex; gap: 4px; align-items: center; margin: 4px 0; }
+.dev-row label{ font-size: 10px; }
+.dev-row select, .dev-row button{
+  background: rgba(255,255,255,0.08); color: var(--hud-text);
+  border: none; border-radius: 6px; padding: 3px 6px; font-size: 10px;
+}
+.dev-log{
+  max-height: 140px; overflow-y: auto;
+  font-family: ui-monospace, monospace; font-size: 9px;
+  background: rgba(0,0,0,0.4); border-radius: 6px;
+  padding: 4px 6px; color: #8aa0bc;
+}
+.dev-log div{ margin: 2px 0; }
+.dev-log .ev{ color: #ffce4a; }
+.dev-log .ts{ color: #6a7d96; }

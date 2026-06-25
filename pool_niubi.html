@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>桌球对局 · skill-pool v4 (final)</title>
-<link rel="stylesheet" href="./style_final.css" />
+<title>桌球对局 · pool-niubi (v4 修复版)</title>
+<link rel="stylesheet" href="./pool_niubi.css" />
 </head>
 <body>
 
@@ -34,6 +34,9 @@
         </ul>
       </div>
     </div>
+    <button class="cue-ball-btn" id="btn-cue-ball" aria-label="母球归位">
+      <span class="cue-ball-dot"></span>
+    </button>
   </header>
 
   <div class="turn-strip">
@@ -41,7 +44,6 @@
   </div>
 
   <main class="play-area">
-    <div id="toast-layer"></div>
 
     <aside class="cue-rail" id="cue-rail">
       <button class="spin-entry" id="btn-spin" aria-label="调整击球点">
@@ -60,7 +62,7 @@
       </div>
     </aside>
 
-      <div class="table-wrap">
+    <div class="table-wrap">
       <div class="table" id="table">
         <div class="felt">
           <div class="pocket pocket-tl"></div>
@@ -137,23 +139,29 @@
     </div>
   </div>
 
-  <!-- 游戏结束弹窗 -->
-  <div class="game-over-mask" id="game-over-mask">
-    <div class="game-over-card">
-      <div class="game-over-icon" id="game-over-icon"></div>
-      <div class="game-over-title" id="game-over-title"></div>
-      <div class="game-over-reason" id="game-over-reason"></div>
-      <div class="game-over-btns">
-        <button class="btn-game-restart" id="btn-game-restart">再来一次</button>
-        <button class="btn-game-cancel" id="btn-game-cancel">取消</button>
+  <div class="dev-panel" id="dev-panel">
+    <details>
+      <summary>调试 · niubi (Matter.js)</summary>
+      <div class="dev-row">
+        <label>Bot：</label>
+        <select id="sel-bot">
+          <option value="xiaomai">小麦</option>
+          <option value="xien">席恩</option>
+          <option value="daike">代柯</option>
+        </select>
       </div>
-    </div>
+      <div class="dev-row">
+        <button id="btn-end-debug">结束对局</button>
+        <button id="btn-clear-log">清日志</button>
+      </div>
+      <div class="dev-log" id="dev-log"></div>
+    </details>
   </div>
 
 </div><!-- /.stage -->
 </div><!-- /.stage-frame -->
 
 <script src="./matter.min.js"></script>
-<script src="./game_final.js?v=20240625q"></script>
+<script src="./pool_niubi.js"></script>
 </body>
 </html>
