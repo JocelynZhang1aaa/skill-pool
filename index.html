@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>桌球对局 · skill-pool v4 (final)</title>
+<link rel="stylesheet" href="./style_final.css?v=20240625u" />
+</head>
+<body>
+
+<!-- 9:16 舞台容器 -->
+<div class="stage-frame">
+<div class="stage" id="stage">
+
+  <!-- 顶部 HUD -->
+  <header class="hud">
+    <div class="hud-rows">
+      <div class="hud-row">
+        <span class="hud-label" id="hud-opp-label">对手的</span>
+        <ul class="hud-balls" id="rack-opp">
+          <li class="slot" data-slot="0"></li><li class="slot" data-slot="1"></li>
+          <li class="slot" data-slot="2"></li><li class="slot" data-slot="3"></li>
+          <li class="slot" data-slot="4"></li><li class="slot" data-slot="5"></li>
+          <li class="slot" data-slot="6"></li>
+        </ul>
+      </div>
+      <div class="hud-row">
+        <span class="hud-label">你的球</span>
+        <ul class="hud-balls" id="rack-me">
+          <li class="slot" data-slot="0"></li><li class="slot" data-slot="1"></li>
+          <li class="slot" data-slot="2"></li><li class="slot" data-slot="3"></li>
+          <li class="slot" data-slot="4"></li><li class="slot" data-slot="5"></li>
+          <li class="slot" data-slot="6"></li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <div class="turn-strip">
+    <span class="turn-pill" id="turn-pill">你的回合</span>
+  </div>
+
+  <!-- 小麦立绘 + 气泡（右上角浮层） -->
+  <div class="char-stage" id="char-stage">
+    <div class="char-bubble" id="char-bubble"></div>
+    <img class="char-avatar" id="char-avatar" src="./assets/xiaomai-happy.png" alt="小麦" />
+  </div>
+
+  <main class="play-area">
+    <div id="toast-layer"></div>
+
+    <aside class="cue-rail" id="cue-rail">
+      <button class="spin-entry" id="btn-spin" aria-label="调整击球点">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="12" cy="12" r="2.4" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="rail-track">
+        <div class="rail-fill" id="rail-fill"></div>
+      </div>
+      <div class="rail-stick" id="rail-stick">
+        <div class="rail-stick-tip"></div>
+        <div class="rail-stick-body"></div>
+        <div class="rail-stick-grip"></div>
+      </div>
+    </aside>
+
+      <div class="table-wrap">
+      <div class="table" id="table">
+        <div class="felt">
+          <div class="pocket pocket-tl"></div>
+          <div class="pocket pocket-tr"></div>
+          <div class="pocket pocket-ml"></div>
+          <div class="pocket pocket-mr"></div>
+          <div class="pocket pocket-bl"></div>
+          <div class="pocket pocket-br"></div>
+
+          <div class="cushion cushion-top"></div>
+          <div class="cushion cushion-bottom"></div>
+          <div class="cushion cushion-left"></div>
+          <div class="cushion cushion-right"></div>
+
+          <canvas id="table-canvas" width="400" height="800"></canvas>
+
+          <svg class="aim-layer" id="aim-layer" viewBox="0 0 400 800" preserveAspectRatio="none">
+            <line id="aim-line" x1="0" y1="0" x2="0" y2="0"
+                  stroke="rgba(255,255,255,0.95)" stroke-width="2" opacity="0"/>
+            <g id="aim-bracket" opacity="0">
+              <path d="M -18 -18 L -10 -18 L -10 -10" stroke="#fff" stroke-width="2" fill="none"/>
+              <path d="M 18 -18 L 10 -18 L 10 -10"   stroke="#fff" stroke-width="2" fill="none"/>
+              <path d="M -18 18 L -10 18 L -10 10"   stroke="#fff" stroke-width="2" fill="none"/>
+              <path d="M 18 18 L 10 18 L 10 10"     stroke="#fff" stroke-width="2" fill="none"/>
+            </g>
+            <line id="cue-after-line" x1="0" y1="0" x2="0" y2="0"
+                  stroke="rgba(255,255,255,0.55)" stroke-width="1.5"
+                  stroke-dasharray="4 4" opacity="0"/>
+            <line id="target-line" x1="0" y1="0" x2="0" y2="0"
+                  stroke="rgba(255,255,255,0.7)" stroke-width="1.5"
+                  stroke-dasharray="4 4" opacity="0"/>
+            <line id="bounce-line" x1="0" y1="0" x2="0" y2="0"
+                  stroke="rgba(120,200,255,0.5)" stroke-width="1.5"
+                  stroke-dasharray="5 5" opacity="0"/>
+            <circle id="ghost-ball" cx="0" cy="0" r="14"
+                  fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.65)"
+                  stroke-width="1.4" stroke-dasharray="3 3" opacity="0"/>
+            <g id="table-cue" opacity="0">
+              <line id="table-cue-stick" x1="0" y1="0" x2="0" y2="0"
+                    stroke="url(#cueGrad)" stroke-width="6" stroke-linecap="round"/>
+              <line id="table-cue-tip" x1="0" y1="0" x2="0" y2="0"
+                    stroke="#3a4a6a" stroke-width="6" stroke-linecap="round"/>
+            </g>
+            <defs>
+              <linearGradient id="cueGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stop-color="#2a2018"/>
+                <stop offset="0.15" stop-color="#7a4a28"/>
+                <stop offset="1" stop-color="#d89a5a"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="dock" hidden></footer>
+
+  <button class="ptt-btn" id="btn-ptt" aria-label="按住对话">
+    <svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3m5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11Z"/></svg>
+  </button>
+
+  <div class="spin-mask" id="spin-mask" hidden>
+    <div class="spin-wrap">
+      <div class="spin-title">击球点</div>
+      <div class="spin-ball" id="spin-ball">
+        <div class="spin-ball-shadow"></div>
+        <div class="spin-ball-highlight"></div>
+        <div class="spin-dot" id="spin-dot"></div>
+      </div>
+      <div class="spin-tip">拖动红点：上 = 高杆 / 下 = 低杆 / 左右 = 塞</div>
+      <button class="btn-spin-done" id="btn-spin-done">完成</button>
+    </div>
+  </div>
+
+  <!-- 游戏结束弹窗 -->
+  <div class="game-over-mask" id="game-over-mask">
+    <div class="game-over-card">
+      <div class="game-over-icon" id="game-over-icon"></div>
+      <div class="game-over-title" id="game-over-title"></div>
+      <div class="game-over-reason" id="game-over-reason"></div>
+      <div class="game-over-btns">
+        <button class="btn-game-restart" id="btn-game-restart">再来一次</button>
+        <button class="btn-game-cancel" id="btn-game-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.stage -->
+</div><!-- /.stage-frame -->
+
+<script src="./matter.min.js"></script>
+<script src="./game_final.js?v=20240625w"></script>
+</body>
+</html>
