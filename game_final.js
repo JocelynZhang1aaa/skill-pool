@@ -286,7 +286,6 @@ const State = {
   aimAngle:      -Math.PI/2,
   aimTargetAngle: -Math.PI/2,
   aimPower:  0,
-  spin:      { x:0, y:0 },
   shotHistory: [],   // 逐杆记录（用于对局 summary 回传）
   breakPocketed: [], // 开球进袋记录
   reported:  false   // 本局是否已回传过结果（避免重复上报）
@@ -1078,7 +1077,6 @@ let railDragging=false, railStartY=0, railStartPower=0;
 
 cueRail.addEventListener('pointerdown', (e)=>{
   if (State.turn!=='me'||State.ended) return;
-  if (e.target.closest('.spin-entry')) return;
   if (State.phase==='SHOOTING'||State.phase==='LOCKED') return;
   AudioFx.init();
   setPhase('POWER');
@@ -1099,7 +1097,7 @@ cueRail.addEventListener('pointerup', ()=>{
   if (!railDragging) return;
   railDragging=false;
   if (State.aimPower>0.04){
-    doShot('me', State.aimAngle, State.aimPower, {x:State.spin.x, y:State.spin.y});
+    doShot('me', State.aimAngle, State.aimPower);
   } else { setPower(0); setPhase('IDLE'); }
 });
 cueRail.addEventListener('pointercancel', ()=>{ railDragging=false; setPower(0); setPhase('IDLE'); });
@@ -1119,46 +1117,6 @@ function setRailFill(p){
   const trackH = track? track.getBoundingClientRect().height : 300;
   const maxDrag = Math.max(1, trackH-70);
   if (railStick) railStick.style.transform = `translate(-50%, ${p*maxDrag}px)`;
-}
-
-/* ================================================================
-   10. SPIN MODAL
-   ================================================================ */
-const spinMask = $('#spin-mask');
-const spinBall = $('#spin-ball');
-const spinDot  = $('#spin-dot');
-let spinDrag = false;
-
-$('#btn-spin').addEventListener('click', ()=>{
-  if (State.turn!=='me'||State.ended) return;
-  if (State.phase==='SHOOTING'||State.phase==='LOCKED') return;
-  spinMask.classList.add('spin-active');
-  placeSpinDot(State.spin.x, State.spin.y);
-});
-$('#btn-spin-done').addEventListener('click', ()=>{
-  spinMask.classList.remove('spin-active');
-  $('#btn-spin').classList.toggle('active', State.spin.x!==0||State.spin.y!==0);
-});
-spinBall.addEventListener('pointerdown', (e)=>{ spinDrag=true; spinBall.setPointerCapture(e.pointerId); moveSpin(e); });
-spinBall.addEventListener('pointermove', (e)=>{ if (spinDrag) moveSpin(e); });
-spinBall.addEventListener('pointerup', ()=>{ spinDrag=false; });
-
-function moveSpin(e){
-  const r = spinBall.getBoundingClientRect();
-  const rcx=r.left+r.width/2, rcy=r.top+r.height/2;
-  const radius = r.width/2 - r.width*0.08;
-  let nx=(e.clientX-rcx)/radius, ny=(e.clientY-rcy)/radius;
-  const dist=Math.hypot(nx,ny);
-  if (dist>1){ nx/=dist; ny/=dist; }
-  State.spin.x = +nx.toFixed(2);
-  State.spin.y = +ny.toFixed(2);
-  placeSpinDot(nx,ny);
-}
-function placeSpinDot(x,y){
-  const ballR = spinBall.getBoundingClientRect().width/2;
-  const usable = ballR - ballR*0.14;
-  spinDot.style.left = `calc(50% + ${x*usable}px)`;
-  spinDot.style.top  = `calc(50% + ${y*usable}px)`;
 }
 
 // Cue ball reset (按钮已移除，保留判空避免脚本中断)
@@ -1187,7 +1145,7 @@ function recordContact(a, b){
   if (b.type!=='cue') _shotCtx.contacted.add(b.id);
 }
 
-async function doShot(shooter, angle, power, spin){
+async function doShot(shooter, angle, power){
   setPhase('SHOOTING');
   _settleGuard  = false;
   _stillFrames  = 0;
@@ -1211,21 +1169,9 @@ async function doShot(shooter, angle, power, spin){
 
   // Apply velocity with power curve
   const v0 = PHYS.minSpeed + (PHYS.maxSpeed-PHYS.minSpeed)*Math.pow(power, PHYS.powerCurve);
-  let vx = Math.cos(angle)*v0;
-  let vy = Math.sin(angle)*v0;
-
-  // Spin: left/right (spin.x) and top/bottom (spin.y)
-  if (spin.x){
-    vx += Math.cos(angle+Math.PI/2)*spin.x*v0*PHYS.spinFactor;
-    vy += Math.sin(angle+Math.PI/2)*spin.x*v0*PHYS.spinFactor;
-  }
+  const vx = Math.cos(angle)*v0;
+  const vy = Math.sin(angle)*v0;
   Body.setVelocity(State.cue.body, {x:vx, y:vy});
-
-  // Apply angular velocity for top/bottom spin (spin.y)
-  // Negative spin.y = top spin (follow), Positive = back spin (draw)
-  if (spin.y){
-    Body.setAngularVelocity(State.cue.body, -spin.y * v0 * 0.04);
-  }
 
   _shotStartTime = performance.now();
 
@@ -1812,7 +1758,7 @@ function botPlay(){
   redrawAim();
 
   setTimeout(()=>{
-    doShot('bot', angle, power, {x:0,y:0});
+    doShot('bot', angle, power);
   }, 600);
 }
 
@@ -2054,7 +2000,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626i loaded');
+  console.log('[game_final.js] v=20240626j loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){

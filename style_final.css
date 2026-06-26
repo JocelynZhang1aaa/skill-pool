@@ -312,24 +312,6 @@ html, body{
   gap: 6px;
 }
 
-/* 旋按钮（轨道顶部小图标） */
-.spin-entry{
-  flex: 0 0 auto;
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--hud-text);
-  display: grid; place-items: center;
-  cursor: pointer;
-}
-.spin-entry:active{ background: rgba(255,255,255,0.14); }
-.spin-entry.active{
-  background: rgba(255,206,74,0.2);
-  color: var(--accent-yellow);
-  border-color: var(--accent-yellow);
-}
-
 /* 力度填充轨道（蓝色） */
 .rail-track{
   flex: 1;
@@ -572,84 +554,8 @@ html, body{
 }
 
 /* =========================================
-   SPIN 模态：超大母球 + 红点
+   （击球点 SPIN 模态已移除）
    ========================================= */
-/* SPIN 模态默认隐藏 */
-.spin-mask{ display: none; }
-.spin-mask.spin-active{
-  position: absolute; inset: 0;
-  background: rgba(8, 12, 22, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 70;
-  display: grid; place-items: center;
-  animation: bubble-in 0.22s ease;
-}
-.spin-wrap{
-  display: flex; flex-direction: column; align-items: center; gap: 18px;
-  width: 100%; padding: 0 24px;
-}
-.spin-title{
-  font-size: 14px; font-weight: 700;
-  color: var(--hud-text-dim);
-  letter-spacing: 1px;
-}
-.spin-ball{
-  position: relative;
-  width: 70%; max-width: 260px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 30%, #ffffff 0%, #f0f3f8 60%, #c1c8d2 100%);
-  box-shadow:
-    inset -8px -10px 20px rgba(0,0,0,0.18),
-    inset 5px 6px 14px rgba(255,255,255,0.7),
-    0 14px 40px rgba(0,0,0,0.6);
-  touch-action: none;
-}
-.spin-ball-shadow{
-  position: absolute; inset: 0; border-radius: 50%;
-  box-shadow: inset -16px -22px 36px rgba(0,0,0,0.12);
-  pointer-events: none;
-}
-.spin-ball-highlight{
-  position: absolute;
-  top: 12%; left: 18%;
-  width: 30%; height: 24%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 30% 30%, rgba(255,255,255,0.8) 0%, transparent 70%);
-  pointer-events: none;
-}
-.spin-dot{
-  position: absolute;
-  left: 50%; top: 50%;
-  width: 14%; height: 14%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ff6363 0%, #c92020 80%);
-  box-shadow:
-    inset -2px -3px 5px rgba(0,0,0,0.3),
-    0 2px 6px rgba(180,30,30,0.5);
-  transform: translate(-50%, -50%);
-  cursor: grab;
-}
-.spin-dot:active{ cursor: grabbing; }
-
-.spin-tip{
-  font-size: 12px; color: var(--hud-text-dim);
-  text-align: center; line-height: 1.5;
-  max-width: 260px;
-}
-.btn-spin-done{
-  height: 42px; padding: 0 32px;
-  border-radius: 21px;
-  border: none;
-  background: linear-gradient(180deg, var(--accent-yellow) 0%, var(--accent-yellow-2) 100%);
-  color: #2a1d05;
-  font-size: 14px; font-weight: 800;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(240,167,36,0.4);
-  cursor: pointer;
-}
 
 /* =========================================
    开场蒙层（in-intro class 驱动，3s 自动消失）
