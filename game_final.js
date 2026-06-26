@@ -165,69 +165,54 @@ const VOICE_LINES = {
   }
 };
 
-// 真人语音文件 — 按"真实场景"精确分类，每条只在它成立时播
+// 真人语音文件 — 按"真实场景"精确分类（2026-06-26 重置音频包，19 条全 mp3）
+// 注：本批未提供 on_win(小麦赢) / pfoul_cue(母球落袋专属) 语音 → 这两类回退文字气泡
 const VOICE_CLIPS = {
   xiaomai: {
     // 通用嘲讽（玩家单纯没进球/打丢，没犯规）—— 不含"白球/犯规"字眼
     taunt: [
-      { audio:'./assets/voice/xiaomai/taunt_01_yanke.mp3',  text:'你这准头，建议去挂下眼科' },
-      { audio:'./assets/voice/xiaomai/taunt_02_biyan.wav',  text:'哈哈哈哈，我闭着眼都能比你打得好，真的' },
-      { audio:'./assets/voice/xiaomai/taunt_04_fengge.wav', text:'你这杆打得，怎么说呢，很有个人风格' },
-      { audio:'./assets/voice/xiaomai/taunt_05_dadiu.wav',  text:'不是吧，这都能打丢？' },
+      { audio:'./assets/voice/xiaomai/taunt_01_jiuzhe.mp3', text:'就这？我还以为你有多厉害呢~' },
+      { audio:'./assets/voice/xiaomai/taunt_02_biyan.mp3',  text:'我闭着眼都能比你打得好' },
+      { audio:'./assets/voice/xiaomai/taunt_03_dadiu.mp3',  text:'不是吧阿Sir，这都能打丢？' },
     ],
-    // 小麦自己连杆进球时的得瑟（"送分"= 对方送分给我）
+    // 小麦自己进球时的得瑟（"送分"= 对方送分给我）
     brag: [
-      { audio:'./assets/voice/xiaomai/taunt_03_songfen.wav',text:'哎呀又给我送分了，那我可就不客气啦~' },
+      { audio:'./assets/voice/xiaomai/brag_01_songfen.mp3', text:'哈哈哈 又给我送分了' },
     ],
-    // 卖萌/撒娇（小麦没进球 / 落后时）
+    // 卖萌/撒娇（小麦没进球 / 落后 / 玩家状态太好时）
     cute: [
-      { audio:'./assets/voice/xiaomai/cute_01_renzhen.wav',  text:'喂喂喂！人家明明很认真在打了好不好' },
-      { audio:'./assets/voice/xiaomai/cute_02_naicha.wav',   text:'哼…等下我赢了你请我喝奶茶，要全糖去冰的那种' },
-      { audio:'./assets/voice/xiaomai/cute_03_toulian.wav',  text:'你是不是背着我偷偷练了？感觉你今天有点东西啊' },
-      { audio:'./assets/voice/xiaomai/cute_04_haixing.wav',  text:'其实我觉得你刚才那杆…也还行吧（小声）' },
-      { audio:'./assets/voice/xiaomai/cute_05_rangrang.wav', text:'能不能稍微让我一下下？就一下下嘛~' },
+      { audio:'./assets/voice/xiaomai/cute_01_toulian.mp3',  text:'你是不是背着我偷偷练了？感觉你今天有点东西啊' },
+      { audio:'./assets/voice/xiaomai/cute_02_haixing.mp3',  text:'其实我觉得你刚才那杆…也还行吧' },
+      { audio:'./assets/voice/xiaomai/cute_03_kaigua.mp3',   text:'你今天状态也太好了吧，是不是开挂了啊喂' },
     ],
     // 夸赞（玩家打出好杆）
     praise: [
-      { audio:'./assets/voice/xiaomai/praise_01_sihua.wav',   text:'哇哦这杆可以啊！走位很丝滑嘛，有点东西的' },
-      { audio:'./assets/voice/xiaomai/praise_02_miaozhun.wav',text:'这瞄准做得挺到位的诶' },
-      { audio:'./assets/voice/xiaomai/praise_03_jinbu.wav',   text:'行啊你！进步很大嘛，我都开始紧张了' },
-      { audio:'./assets/voice/xiaomai/praise_04_shuai.wav',   text:'这杆打得…好吧我承认，确实有点帅' },
-      { audio:'./assets/voice/xiaomai/praise_05_jiaodu.wav',  text:'嗯~这个角度选得不错嘛，学得很快呀' },
-      { audio:'./assets/voice/xiaomai/praise_06_lidu.wav',    text:'可以啊这力度控制，比上次强了不止一点点' },
-    ],
-    // 赢了（终局，小麦获胜）
-    on_win: [
-      { audio:'./assets/voice/xiaomai/win_01_zuilihai.wav', text:'耶！！我赢了！！快说小麦最厉害！' },
-      { audio:'./assets/voice/xiaomai/win_02_buchala.wav',  text:'你打得也不差啦，下次再接再厉' },
-      { audio:'./assets/voice/xiaomai/win_03_shili.wav',    text:'这就是实力的证明，感谢对手的精彩表现' },
-      { audio:'./assets/voice/xiaomai/win_04_fanbo.wav',    text:'胜利属于小麦！不接受反驳' },
+      { audio:'./assets/voice/xiaomai/praise_01_sihua.mp3',  text:'哇哦这杆可以啊！走位很丝滑嘛，有点东西的' },
+      { audio:'./assets/voice/xiaomai/praise_02_lidu.mp3',   text:'可以啊这力度控制，比上次强了不止一点点' },
+      { audio:'./assets/voice/xiaomai/praise_03_baochi.mp3', text:'不错不错，继续保持这个水平哦~' },
     ],
     // 输了（终局，小麦落败）
     on_lose: [
-      { audio:'./assets/voice/xiaomai/lose_01_zuobi.wav',   text:'…你绝对作弊了吧？？不算不算这局不算！' },
-      { audio:'./assets/voice/xiaomai/lose_02_shouhua.wav', text:'再来一局！刚才那是手滑，手滑懂吗' },
-      { audio:'./assets/voice/xiaomai/lose_03_rangju.wav',  text:'哼，让你一局而已，别得意太早啊喂' },
+      { audio:'./assets/voice/xiaomai/lose_01_zuobi.mp3',     text:'…你绝对作弊了吧？？不算不算这局不算' },
+      { audio:'./assets/voice/xiaomai/lose_02_zailai.mp3',    text:'…再来一局！这把只是你运气好罢了' },
+      { audio:'./assets/voice/xiaomai/lose_03_zhuangtai.mp3', text:'…好吧你赢了，但是！但是我刚才明显状态不好！' },
+      { audio:'./assets/voice/xiaomai/lose_04_rangju.mp3',    text:'哼，让你一局而已，别得意太早' },
+      { audio:'./assets/voice/xiaomai/lose_05_buchala.mp3',   text:'你这次打得也不差啦，下次再接再厉' },
     ],
-    // 玩家犯规 —— 按犯规类型细分，确保"母球落袋""空杆"只在对应犯规时播
-    pfoul_cue: [   // 玩家母球落袋专属
-      { audio:'./assets/voice/xiaomai/pfoul_01_muqiu.wav',     text:'哎呀母球进袋了…它是不是觉得你的技术配不上它' },
-      { audio:'./assets/voice/xiaomai/pfoul_04_huanzhuren.wav',text:'哎呀，白球都进去了…它可能想换个主人' },
+    // 玩家空杆专属
+    pfoul_empty: [
+      { audio:'./assets/voice/xiaomai/pfoul_empty_01.mp3', text:'空杆？！你是来打球的还是来给白球做按摩的？' },
     ],
-    pfoul_empty: [ // 玩家空杆专属
-      { audio:'./assets/voice/xiaomai/pfoul_02_konggan.wav',   text:'空杆？！你是来打球的还是来给白球做按摩的？' },
-    ],
-    pfoul_other: [ // 玩家其它犯规（先碰对方球/黑8 等）
-      { audio:'./assets/voice/xiaomai/pfoul_03_huanwo.wav',    text:'哇哦犯规了！这下换我了嘿嘿嘿' },
-      { audio:'./assets/voice/xiaomai/pfoul_05_caipan.wav',    text:'犯规！裁判！他犯规了' },
+    // 玩家其它犯规（先碰对方球/黑8 等；母球落袋也暂用这条通用犯规）
+    pfoul_other: [
+      { audio:'./assets/voice/xiaomai/pfoul_other_01.mp3', text:'哦豁~犯规了犯规了！' },
     ],
     // 小麦自己犯规（找借口）
     on_bot_foul: [
-      { audio:'./assets/voice/xiaomai/bfoul_01_bug.wav',       text:'咳咳…刚才那杆当我没打过，系统bug，绝对是bug' },
-      { audio:'./assets/voice/xiaomai/bfoul_02_chishenme.wav', text:'啊这…那个，我刚刚在想今晚吃什么来着' },
-      { audio:'./assets/voice/xiaomai/bfoul_03_lipu.wav',      text:'好吧我承认这杆打得离谱…' },
-      { audio:'./assets/voice/xiaomai/bfoul_04_shoudou.wav',   text:'哎呀手抖了一下…' },
+      { audio:'./assets/voice/xiaomai/bfoul_01_bug.mp3',     text:'咳咳…刚才那杆当我没打过，系统bug，绝对是bug' },
+      { audio:'./assets/voice/xiaomai/bfoul_02_shoudou.mp3', text:'哎呀手抖了一下…' },
     ],
+    // on_win / pfoul_cue 本批无语音 → say() 自动回退到文字气泡
   }
 };
 
@@ -1715,10 +1700,8 @@ function resolveShot(){
     showToast(foulToast, 'foul');
     State.runStreak[sideKey] = 0;
     if (me){
-      // 玩家犯规 → 小麦挑衅，按犯规类型播对应专属语音
-      let cat = 'pfoul_other';
-      if (foulReason === '母球落袋') cat = 'pfoul_cue';
-      else if (foulReason === '空杆') cat = 'pfoul_empty';
+      // 玩家犯规 → 小麦挑衅。本批音频仅空杆有专属，其余犯规(含母球落袋)用通用犯规语音
+      const cat = (foulReason === '空杆') ? 'pfoul_empty' : 'pfoul_other';
       Character.say(cat, 'smug', { voiceChance:1, bubble:true });
     } else {
       // 小麦自己犯规 → 找借口（只有真 foul 才会进这里）
@@ -2070,7 +2053,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626c loaded');
+  console.log('[game_final.js] v=20240626d loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
