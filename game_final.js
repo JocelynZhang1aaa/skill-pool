@@ -179,17 +179,17 @@ const VOICE_CLIPS = {
     brag: [
       { audio:'./assets/voice/xiaomai/brag_01_songfen.mp3', text:'哈哈哈 又给我送分了' },
     ],
-    // 卖萌/撒娇（小麦没进球 / 落后 / 玩家状态太好时）
-    cute: [
-      { audio:'./assets/voice/xiaomai/cute_01_toulian.mp3',  text:'你是不是背着我偷偷练了？感觉你今天有点东西啊' },
-      { audio:'./assets/voice/xiaomai/cute_02_haixing.mp3',  text:'其实我觉得你刚才那杆…也还行吧' },
-      { audio:'./assets/voice/xiaomai/cute_03_kaigua.mp3',   text:'你今天状态也太好了吧，是不是开挂了啊喂' },
-    ],
-    // 夸赞（玩家打出好杆）
+    // 夸赞 / 酸玩家（玩家进球或打出好杆时，小麦的反应）
     praise: [
       { audio:'./assets/voice/xiaomai/praise_01_sihua.mp3',  text:'哇哦这杆可以啊！走位很丝滑嘛，有点东西的' },
       { audio:'./assets/voice/xiaomai/praise_02_lidu.mp3',   text:'可以啊这力度控制，比上次强了不止一点点' },
       { audio:'./assets/voice/xiaomai/praise_03_baochi.mp3', text:'不错不错，继续保持这个水平哦~' },
+      { audio:'./assets/voice/xiaomai/cute_01_toulian.mp3',  text:'你是不是背着我偷偷练了？感觉你今天有点东西啊' },
+      { audio:'./assets/voice/xiaomai/cute_03_kaigua.mp3',   text:'你今天状态也太好了吧，是不是开挂了啊喂' },
+    ],
+    // 小麦自己没进球时的撒娇（自嘲，不夸玩家）
+    cute: [
+      { audio:'./assets/voice/xiaomai/cute_02_haixing.mp3',  text:'其实我觉得刚才那杆…也还行吧' },
     ],
     // 输了（终局，小麦落败）
     on_lose: [
@@ -1597,13 +1597,13 @@ function resolveShot(){
   // (1) 母球落袋 = 犯规
   if (cuePocketed){
     foul = true; foulReason = '母球落袋';
-    foulToast = `${subj}白球落袋犯规，${nextTurnTip}`;
+    foulToast = me ? '你白球进袋犯规' : `${botName}白球进袋犯规`;
   }
 
   // (2) 空杆 = 犯规
   if (!foul && !ctx.firstContact){
     foul = true; foulReason = '空杆';
-    foulToast = `${subj}空杆犯规，${nextTurnTip}`;
+    foulToast = me ? '你空杆犯规了' : `${botName}空杆犯规了`;
   }
 
   // (3) 已分花色后，第一颗碰到的必须是己方花色
@@ -1613,12 +1613,12 @@ function resolveShot(){
     if (fc.type === 'eight'){
       if (!groupCleared(shooterGroup)){
         foul = true; foulReason = '未清完就先碰黑8';
-        foulToast = `${subj || '你'}碰到了黑8，犯规，${nextTurnTip}`;
+        foulToast = me ? '你误碰黑8犯规' : `${botName}误碰黑8犯规`;
       }
     } else if (fc.type !== shooterGroup){
-      // 先碰到对方花色球：明确说出碰了谁的球
+      // 先碰到对方花色球
       foul = true; foulReason = '先碰到对方球';
-      foulToast = `${subj || '你'}碰到了${otherName}的球，犯规，${nextTurnTip}`;
+      foulToast = me ? '你碰错球犯规' : `${botName}碰错球犯规`;
     }
   }
 
@@ -1720,7 +1720,7 @@ function resolveShot(){
     // 没进球（没犯规，单纯打丢）→ 换手
     State.runStreak[sideKey] = 0;
     showToast(`现在${nextTurnTip}`, 'info');
-    // 玩家打丢 → 通用嘲讽(taunt，不含犯规字眼)；小麦自己打丢 → 撒娇
+    // 玩家打丢 → 嘲讽"这都能打丢"(taunt)；小麦自己打丢 → 自嘲撒娇(cute，不夸玩家)
     if (me) Character.say('taunt', 'smug', { voiceChance:0.4 });
     else    Character.say('cute',  'cute', { voiceChance:0.4 });
     switchTurn(me ? 'bot' : 'me');
@@ -2053,7 +2053,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626d loaded');
+  console.log('[game_final.js] v=20240626e loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
