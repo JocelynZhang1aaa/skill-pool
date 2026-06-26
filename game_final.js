@@ -2054,7 +2054,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626h loaded');
+  console.log('[game_final.js] v=20240626i loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
@@ -2116,7 +2116,100 @@ function init(){
   // 开局引导 toast（也用于确认 toast 显示位置正确）
   setTimeout(()=> showToast('你先开球吧', 'info'), 400);
   requestAnimationFrame(gameLoop);
+
+  // 新手引导：首次进入自动弹；问号按钮随时可重看
+  Guide.init();
 }
+
+/* ================================================================
+   20. 新手分步高亮引导（方案B）
+   ================================================================ */
+const Guide = (() => {
+  const SEEN_KEY = 'pool_guide_seen_v1';
+  // 4 步：目标元素选择器 + 文案 + 气泡相对位置(below/above/auto)
+  const STEPS = [
+    { sel:'#cue-rail',   text:'拖动左侧这根球杆来蓄力 —— 往下拖得越多，击球力度越大，松手即出杆。', pos:'right' },
+    { sel:'#table',      text:'在球桌上拖动可以调整瞄准方向，白色虚线就是母球的去向。', pos:'auto' },
+    { sel:'.hud',        text:'顶部显示你和小麦各自要打的球，把自己花色的球全部打进、最后打进黑8 就赢啦。', pos:'below' },
+    { sel:'#char-stage', text:'小麦会全程陪你玩、随口点评，赢了她试试看 😏', pos:'below' },
+  ];
+  let idx = 0;
+  let mask, hole, tip, stepEl, textEl, nextBtn;
+
+  function el(id){ return document.getElementById(id); }
+
+  function place(){
+    const step = STEPS[idx];
+    const target = document.querySelector(step.sel);
+    const stage = document.getElementById('stage') || document.body;
+    if (!target){ next(); return; }   // 目标不存在则跳过该步
+    const tr = target.getBoundingClientRect();
+    const sr = stage.getBoundingClientRect();
+    // 高亮洞（相对 stage 定位，留 6px 内边距）
+    const pad = 6;
+    const left = tr.left - sr.left - pad;
+    const top  = tr.top  - sr.top  - pad;
+    const w = tr.width + pad*2;
+    const h = tr.height + pad*2;
+    hole.style.left = left + 'px';
+    hole.style.top = top + 'px';
+    hole.style.width = w + 'px';
+    hole.style.height = h + 'px';
+
+    // 气泡文案
+    stepEl.textContent = `${idx+1} / ${STEPS.length}`;
+    textEl.textContent = step.text;
+    nextBtn.textContent = (idx === STEPS.length-1) ? '开始游戏' : '下一步';
+
+    // 气泡位置：默认放洞下方；放不下则放上方
+    const tipW = 248, tipH = 120;
+    let tipLeft = Math.min(Math.max(left, 10), sr.width - tipW - 10);
+    let tipTop;
+    const spaceBelow = sr.height - (top + h);
+    if (step.pos === 'above' || (step.pos !== 'below' && spaceBelow < tipH + 20)){
+      tipTop = top - tipH - 12;
+    } else {
+      tipTop = top + h + 12;
+    }
+    tipTop = Math.min(Math.max(tipTop, 10), sr.height - tipH - 10);
+    tip.style.left = tipLeft + 'px';
+    tip.style.top = tipTop + 'px';
+  }
+
+  function show(){
+    idx = 0;
+    mask.hidden = false;
+    place();
+  }
+  function next(){
+    idx++;
+    if (idx >= STEPS.length){ finish(); return; }
+    place();
+  }
+  function finish(){
+    mask.hidden = true;
+    try { localStorage.setItem(SEEN_KEY, '1'); } catch(e){}
+  }
+
+  function init(){
+    mask = el('guide-mask'); hole = el('guide-hole'); tip = el('guide-tip');
+    stepEl = el('guide-step'); textEl = el('guide-text'); nextBtn = el('guide-next');
+    if (!mask) return;
+    el('guide-next').addEventListener('click', next);
+    el('guide-skip').addEventListener('click', finish);
+    const help = el('btn-help');
+    if (help) help.addEventListener('click', show);
+    // 窗口尺寸变化时重新定位当前步
+    window.addEventListener('resize', ()=>{ if (!mask.hidden) place(); });
+
+    // 首次进入自动弹（延迟一点，等布局稳定）
+    let seen = false;
+    try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch(e){}
+    if (!seen) setTimeout(show, 700);
+  }
+
+  return { init, show };
+})();
 
 if (document.readyState==='complete') init();
 else window.addEventListener('load', init);

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>桌球对局 · skill-pool v4 (final)</title>
-<link rel="stylesheet" href="./style_final.css?v=20240626h" />
+<link rel="stylesheet" href="./style_final.css?v=20240626i" />
 </head>
 <body>
 
@@ -38,6 +38,22 @@
 
   <div class="turn-strip">
     <span class="turn-pill" id="turn-pill">你的回合</span>
+  </div>
+
+  <!-- 玩法引导：常驻问号按钮（左上角） -->
+  <button class="help-btn" id="btn-help" aria-label="玩法说明">?</button>
+
+  <!-- 玩法引导：分步高亮浮层 -->
+  <div class="guide-mask" id="guide-mask" hidden>
+    <div class="guide-hole" id="guide-hole"></div>
+    <div class="guide-tip" id="guide-tip">
+      <div class="guide-step" id="guide-step">1 / 4</div>
+      <div class="guide-text" id="guide-text"></div>
+      <div class="guide-btns">
+        <button class="guide-skip" id="guide-skip">跳过</button>
+        <button class="guide-next" id="guide-next">下一步</button>
+      </div>
+    </div>
   </div>
 
   <!-- 小麦圆形头像框 + 气泡（右上角浮层） -->
@@ -154,6 +170,6 @@
 </div><!-- /.stage-frame -->
 
 <script src="./matter.min.js"></script>
-<script src="./game_final.js?v=20240626h"></script>
+<script src="./game_final.js?v=20240626i"></script>
 </body>
 </html>

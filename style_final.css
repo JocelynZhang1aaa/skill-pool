@@ -1004,3 +1004,85 @@ html, body{
   opacity: 1;
   transform: translateX(0) scale(1);
 }
+
+/* =========================================
+   玩法引导（分步高亮）
+   ========================================= */
+/* 常驻问号按钮（左上角） */
+.help-btn{
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  z-index: 8;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.35);
+  background: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.85);
+  font-size: 15px; font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: grid; place-items: center;
+  padding: 0;
+  backdrop-filter: blur(2px);
+}
+.help-btn:active{ transform: scale(0.92); }
+
+/* 引导遮罩：全屏暗化 */
+.guide-mask{
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: auto;       /* 引导期间拦截操作 */
+}
+.guide-mask[hidden]{ display: none; }
+
+/* 高亮"挖洞"：用超大 box-shadow 把洞外区域压暗，洞内透出 */
+.guide-hole{
+  position: absolute;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.72);
+  border: 2px solid rgba(255,255,255,0.9);
+  transition: left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease;
+  pointer-events: none;
+}
+
+/* 说明气泡卡片 */
+.guide-tip{
+  position: absolute;
+  max-width: 248px;
+  background: #ffffff;
+  color: #1a1a1a;
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  transition: left 0.3s ease, top 0.3s ease;
+}
+.guide-step{
+  font-size: 11px; font-weight: 700;
+  color: #888;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.guide-text{
+  font-size: 13.5px;
+  line-height: 1.55;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.guide-btns{
+  display: flex; align-items: center; justify-content: space-between;
+}
+.guide-skip{
+  background: none; border: none;
+  color: #999; font-size: 12.5px;
+  cursor: pointer; padding: 4px 6px;
+}
+.guide-next{
+  background: #2a7d4f;
+  border: none; border-radius: 18px;
+  color: #fff; font-size: 13px; font-weight: 600;
+  padding: 7px 20px;
+  cursor: pointer;
+}
+.guide-next:active{ transform: scale(0.96); }
