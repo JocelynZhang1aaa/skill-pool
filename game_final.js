@@ -1519,7 +1519,7 @@ function pocketBall(b, pk){
       toX: pk.x, toY: pk.y,        // 朝袋心收拢
       ang: b._ang || 0,
       t0: performance.now(),
-      dur: 260                     // 动画时长 ms
+      dur: 150                     // 动画时长 ms（加快坠落）
     });
     Matter.World.remove(world, b.body);
     b.body = null;
@@ -1542,19 +1542,19 @@ function renderPocketAnims(){
     const off = ballCache[a.id];
     let t = (now - a.t0) / a.dur;
     if (t >= 1 || !off) return false;   // 动画完成 → 移除
-    // 缓动：先快速被吸向袋心，后段加速缩小（坠落感）
+    // 缓动：快速被吸向袋心，更早开始缩小（更干脆的坠落）
     const ease = t < 0.5 ? (t*2)*(t*2)*0.5 : 1 - Math.pow(-2*t+2,2)/2;
     const cx = a.fromX + (a.toX - a.fromX) * ease;
     const cy = a.fromY + (a.toY - a.fromY) * ease;
-    // 尺寸：前段基本不变，后段快速缩小到 0（掉进洞里）
-    const scale = t < 0.35 ? 1 : 1 - ((t - 0.35) / 0.65);
+    // 尺寸：t>0.25 起快速缩小到 0（掉进洞里）
+    const scale = t < 0.25 ? 1 : 1 - ((t - 0.25) / 0.75);
     const d = R * 2 * Math.max(0, scale);
     if (d < 1) return true;             // 太小就不画，但保留到 t>=1 再移除
     ctx.save();
     ctx.translate(cx, cy);
-    ctx.rotate(a.ang + t * 1.2);        // 入袋时再转一点，强化滚入感
+    ctx.rotate(a.ang + t * 1.4);        // 入袋时再转一点，强化滚入感
     // 整体变暗（坠入洞中）
-    ctx.globalAlpha = Math.max(0, 1 - t * 0.7);
+    ctx.globalAlpha = Math.max(0, 1 - t * 0.85);
     ctx.drawImage(off, -d/2, -d/2, d, d);
     ctx.restore();
     return true;
@@ -2099,7 +2099,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626f loaded');
+  console.log('[game_final.js] v=20240626g loaded');
   try { window.__pocketAnimsLen = () => _pocketAnims.length; } catch(e){}
   State.startTs = Date.now();
   canvas = $('#table-canvas');
