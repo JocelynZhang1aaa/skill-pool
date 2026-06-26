@@ -296,16 +296,16 @@ html, body{
 .play-area{
   flex: 1 1 auto;
   display: flex; align-items: stretch;
-  gap: 8px;
+  gap: 4px;
   min-height: 0;
-  padding: 0 4px;
+  padding: 0 2px;
   position: relative;   /* toast 弹幕浮层定位基准 */
 }
 
-/* 左侧球杆轨道 */
+/* 左侧球杆轨道（收窄，给球桌让出更多宽度） */
 .cue-rail{
   flex: 0 0 auto;
-  width: 38px;
+  width: 30px;
   position: relative;
   display: flex; flex-direction: column; align-items: center;
   padding: 6px 0 8px;
@@ -402,9 +402,9 @@ html, body{
   height: 100%;
   aspect-ratio: 1 / 2;
   max-width: 100%;
-  padding: 18px;
+  padding: 13px;
   background: linear-gradient(180deg, var(--wood-light) 0%, var(--wood-1) 50%, var(--wood-2) 100%);
-  border-radius: 22px;
+  border-radius: 20px;
   box-shadow:
     inset 0 0 0 1px var(--wood-edge),
     inset 0 0 0 2px rgba(0,0,0,0.4),
@@ -903,43 +903,49 @@ html, body{
 .btn-game-cancel:active{ transform: scale(0.97); background: rgba(255,255,255,0.06); }
 
 /* =========================================
-   小麦立绘 + 气泡台词（右上角浮层）
+   小麦圆形头像框 + 气泡台词（右上角浮层）
    ========================================= */
 .char-stage{
   position: absolute;
   top: 6px;
   right: 8px;
   z-index: 7;
-  width: 73px;                /* 再缩小 5%：77 → 73 */
-  height: 97px;
+  width: 64px;
+  height: 64px;
   pointer-events: none;       /* 不挡操作 */
   overflow: visible;          /* 气泡可溢出容器向左展开 */
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-end;
 }
-.char-avatar{
-  width: 73px;                /* 再缩小 5% */
-  height: auto;
-  max-height: 97px;
-  object-fit: contain;
-  object-position: bottom center;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.45));
-  transform: translateY(2px) scale(1);
-  transform-origin: bottom right;
+/* 圆形头像框：描边 + 渐变底 + 阴影，立绘裁进圆里 */
+.char-frame{
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #2a3148 0%, #161b29 100%);
+  border: 2.5px solid rgba(255,255,255,0.92);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.3);
   transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
 }
-/* 说话时立绘轻微"探头" */
-.char-stage.talking .char-avatar{
-  transform: translateY(-2px) scale(1.06);
+.char-avatar{
+  position: absolute;
+  left: 50%;
+  bottom: -10px;              /* 立绘下沉，让头/脸落在圆框中上部 */
+  transform: translateX(-50%);
+  width: 108%;                /* 略放大，填满圆框、突出面部 */
+  height: auto;
+  object-fit: contain;
+  object-position: bottom center;
+}
+/* 说话时圆框轻微放大"探头" */
+.char-stage.talking .char-frame{
+  transform: scale(1.08);
 }
 
 /* 台词气泡：黑描边漫画对话框（参考用户提供样式），从立绘左侧弹出 */
 .char-bubble{
   position: absolute;
-  right: 64px;               /* 贴在立绘左边（跟随立绘缩小） */
-  top: 14px;
+  right: 56px;               /* 贴在圆框左边 */
+  top: 8px;
   width: max-content;        /* 按内容自适应宽度，避免被父容器挤成竖排 */
   max-width: 176px;          /* 上限，超出才换行（缩小） */
   min-width: 56px;

@@ -294,7 +294,10 @@ const State = {
   aimAngle:      -Math.PI/2,
   aimTargetAngle: -Math.PI/2,
   aimPower:  0,
-  spin:      { x:0, y:0 }
+  spin:      { x:0, y:0 },
+  shotHistory: [],   // 逐杆记录（用于对局 summary 回传）
+  breakPocketed: [], // 开球进袋记录
+  reported:  false   // 本局是否已回传过结果（避免重复上报）
 };
 
 let engine=null, world=null, walls=[];
@@ -1671,6 +1674,29 @@ function resolveShot(){
   if (!State.runStreak) State.runStreak = { me:0, bot:0 };
   const sideKey = me ? 'me' : 'bot';
 
+  // ===== 逐杆记录（用于对局 summary 回传） =====
+  const ballLabel = (b) => {
+    if (b.num === 8) return '8号(黑8)';
+    const g = b.type === 'solid' ? '全色' : (b.type === 'stripe' ? '花色' : '');
+    return `${b.num}号${g?'('+g+')':''}`;
+  };
+  const isBreak = (State.shotHistory.length === 0);
+  if (isBreak && me) State.breakPocketed = pockets.map(ballLabel);
+  State.shotHistory.push({
+    seq: State.shotHistory.length + 1,
+    isBreak,
+    shooter: me ? '你' : botName,
+    shooterId: me ? 'me' : (State.botProfile.id || 'bot'),
+    pocketed: pockets.map(ballLabel),
+    firstContact: ctx.firstContact ? ballLabel(ctx.firstContact) : '空杆(未碰球)',
+    cushionHit: !!ctx.cushionHit,
+    cuePocketed,
+    foul,
+    foulReason: foul ? foulReason : '',
+    pocketedOwn,
+    pocketedEight
+  });
+
   if (foul){
     // 犯规 toast 已在第 1 步按"谁犯规"组装好
     showToast(foulToast, 'foul');
@@ -1888,9 +1914,125 @@ function showToast(msg, kind = 'info'){
   }, 2400);
 }
 
+/* ================================================================
+   数据回传通道（落地页上报接口）
+   - content 字段 = summary_text（纯文本对局摘要）
+   - 同一局所有事件携带相同 contentId
+   ================================================================ */
+const Reporter = (() => {
+  const ENDPOINT = 'https://testuniuni.html5.qq.com/api/external-report/reportExternal';
+  const SCENE = 'pool8';            // 场景标识：美式8球
+  const pageEnterTime = Date.now();
+
+  // URL 查询参数整体透传
+  function getUrlParams(){
+    const out = {};
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      for (const [k, v] of sp.entries()) out[k] = v;
+    } catch(e){}
+    return out;
+  }
+  const urlParams = getUrlParams();
+  // 本局会话标识
+  const contentId = Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+
+  function send(eventName, opts = {}){
+    const body = { urlParams, sceneName: SCENE, eventName, contentId };
+    if (opts.withStayDuration) body.eventTime = Date.now() - pageEnterTime;
+    if (opts.content) body.content = String(opts.content).slice(0, 10000); // 接口上限 10000
+    try {
+      return fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        keepalive: !!opts.keepalive   // 页面卸载场景需要 keepalive
+      }).then(r => r.json()).catch(() => {});
+    } catch(e){ return Promise.resolve(); }
+  }
+
+  return { send, contentId };
+})();
+
+/* 生成对局 summary_text（按 summary_text_template 填充） */
+function buildSummaryText(kind){
+  const bot = State.botProfile;
+  const botName = bot.name;
+  const d = new Date(State.startTs || Date.now());
+  const dateStr = `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+  // 双方清袋统计
+  const groupCleared = (g) => g ? State.balls.filter(b=>b.type===g && b.pocketed).length : 0;
+  const userPocketed = groupCleared(State.myGroup);
+  const botPocketed  = groupCleared(State.oppGroup);
+  const groupLabel = (g) => g==='solid' ? '全色(solid)' : (g==='stripe' ? '花色(stripe)' : '未定');
+
+  // 逐杆记录文本
+  const lines = State.shotHistory.map(s => {
+    const tag = s.isBreak ? `[开球·${s.shooter}]` : `[第${s.seq}杆·${s.shooter}]`;
+    const pk = s.pocketed.length ? s.pocketed.join('、') : '无';
+    let res;
+    if (s.foul)            res = `犯规：${s.foulReason}`;
+    else if (s.pocketedEight) res = '打进黑8';
+    else if (s.pocketedOwn) res = '进球续杆';
+    else                   res = '未进，换手';
+    return `${s.seq}. ${tag} 进袋：${pk} | 首碰：${s.firstContact} | ${res}`;
+  }).join('\n');
+
+  if (kind === 'interrupt'){
+    const userLeft = State.myGroup ? State.balls.filter(b=>b.type===State.myGroup && !b.pocketed && b.num!==8).length : '未定';
+    const botLeft  = State.oppGroup ? State.balls.filter(b=>b.type===State.oppGroup && !b.pocketed && b.num!==8).length : '未定';
+    const eightAlive = !State.balls.find(b=>b.num===8 && b.pocketed);
+    return [
+      `用户与${botName}（bot_id: ${bot.id}）于 ${dateStr} ${timeStr} 开始「skill-pool」美式8球桌球对局。`,
+      ``,
+      `对局进行到第 ${State.shotHistory.length} 杆时中断（用户离开页面）。当前比分：用户清袋 ${userPocketed}/7，${botName}清袋 ${botPocketed}/7。`,
+      ``,
+      `当前局面：`,
+      `- 用户花色：${groupLabel(State.myGroup)}（剩余 ${userLeft} 颗）`,
+      `- ${botName}花色：${groupLabel(State.oppGroup)}（剩余 ${botLeft} 颗）`,
+      `- 黑8状态：${eightAlive ? '仍在台面' : '已落袋'}`,
+      `- 当前轮次：${State.turn==='me' ? '用户的回合' : botName+'的回合'}`,
+      ``,
+      `已完成的回合记录：`,
+      lines || '（无）'
+    ].join('\n');
+  }
+
+  // 结束
+  const outcomeDesc = State.result === 'win' ? '用户获胜！' : '用户落败。';
+  return [
+    `用户与${botName}（bot_id: ${bot.id}）于 ${dateStr} ${timeStr} 进行了一局「skill-pool」美式8球桌球对局。`,
+    ``,
+    `${outcomeDesc}${State._endReason ? '（'+State._endReason+'）' : ''} 共进行了 ${State.shotHistory.length} 杆。`,
+    ``,
+    `对局记录：`,
+    lines || '（无）',
+    ``,
+    `最终比分：用户清袋 ${userPocketed}/7，${botName}清袋 ${botPocketed}/7。`,
+    `胜负原因：${State._endReason || (State.result==='win'?'用户合法打进黑8获胜':'对局结束')}`
+  ].join('\n');
+}
+
+/* 回传对局结果（结束 / 中断）。reported 标记避免重复 */
+function reportMatch(kind){
+  if (State.reported) return;
+  State.reported = true;
+  const content = buildSummaryText(kind === 'interrupt' ? 'interrupt' : 'end');
+  const eventName = kind === 'interrupt' ? 'game_interrupt' : 'game_result';
+  Reporter.send(eventName, { content, keepalive: kind === 'interrupt' });
+  try { window.__lastSummary = content; } catch(e){}   // 便于调试查看
+}
+// 暴露便于调试 / 外部触发回传
+try { window.__poolReport = { buildSummaryText, reportMatch, Reporter }; window.__poolState = State; } catch(e){}
+
 function endMatch(result, reason){
   State.ended = true;
   State.result = result;
+  State._endReason = reason || '';
+  // 对局结果回传（summary_text 通过 content 字段）
+  reportMatch('end');
   // 角色反应：玩家赢 = 小麦输（委屈）；玩家输 = 小麦赢（嘚瑟）。终局是大事，force 弹气泡
   if (result === 'win') Character.say('on_lose', 'pout', { bubble:true, force:true });
   else                  Character.say('on_win', 'smug', { bubble:true, force:true });
@@ -1908,11 +2050,25 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240625w loaded');
+  console.log('[game_final.js] v=20240626a loaded');
+  State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
     ctx = canvas.getContext('2d');
   }
+
+  // 页面 PV 上报（每次访问一次）
+  Reporter.send('pv');
+
+  // 页面离开/隐藏：若对局未结束，回传"中断"摘要 + 曝光停留时长
+  const onLeave = () => {
+    if (!State.ended && State.shotHistory.length > 0) reportMatch('interrupt');
+    Reporter.send('exp', { withStayDuration: true, keepalive: true });
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') onLeave();
+  });
+  window.addEventListener('pagehide', onLeave);
 
   // "再来一次" 按钮
   const btnR = $('#btn-game-restart');
@@ -1928,6 +2084,8 @@ function init(){
       State.balls[0].pocketed = false; State.balls[0].body = null;
       State.myGroup = null; State.oppGroup = null;
       State.turn = 'me'; State.phase = 'IDLE'; State.ended = false; State.result = null;
+      State.shotHistory = []; State.breakPocketed = []; State.reported = false;
+      State._endReason = ''; State.startTs = Date.now(); State.shotSeq = 0;
       _shotCtx = null; _stillFrames = 0; _settleGuard = false;
       if (!State.runStreak) State.runStreak = { me:0, bot:0 };
       initEngine(); setupRack(); updateTurnUI(); showGroupBanner();

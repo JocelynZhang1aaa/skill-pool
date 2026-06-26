@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>桌球对局 · skill-pool v4 (final)</title>
-<link rel="stylesheet" href="./style_final.css?v=20240625u" />
+<link rel="stylesheet" href="./style_final.css?v=20240626a" />
 </head>
 <body>
 
@@ -40,10 +40,12 @@
     <span class="turn-pill" id="turn-pill">你的回合</span>
   </div>
 
-  <!-- 小麦立绘 + 气泡（右上角浮层） -->
+  <!-- 小麦圆形头像框 + 气泡（右上角浮层） -->
   <div class="char-stage" id="char-stage">
     <div class="char-bubble" id="char-bubble"></div>
-    <img class="char-avatar" id="char-avatar" src="./assets/xiaomai-happy.png" alt="小麦" />
+    <div class="char-frame">
+      <img class="char-avatar" id="char-avatar" src="./assets/xiaomai-happy.png" alt="小麦" />
+    </div>
   </div>
 
   <main class="play-area">
@@ -124,12 +126,6 @@
 
   </main>
 
-  <footer class="dock" hidden></footer>
-
-  <button class="ptt-btn" id="btn-ptt" aria-label="按住对话">
-    <svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3m5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11Z"/></svg>
-  </button>
-
   <div class="spin-mask" id="spin-mask" hidden>
     <div class="spin-wrap">
       <div class="spin-title">击球点</div>
@@ -160,6 +156,6 @@
 </div><!-- /.stage-frame -->
 
 <script src="./matter.min.js"></script>
-<script src="./game_final.js?v=20240625w"></script>
+<script src="./game_final.js?v=20240626a"></script>
 </body>
 </html>
