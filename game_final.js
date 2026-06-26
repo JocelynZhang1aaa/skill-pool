@@ -165,16 +165,19 @@ const VOICE_LINES = {
   }
 };
 
-// 真人语音文件 — 7 类全覆盖（共 32 条），text 用于同步显示字幕气泡
+// 真人语音文件 — 按"真实场景"精确分类，每条只在它成立时播
 const VOICE_CLIPS = {
   xiaomai: {
-    // 嘲讽（玩家失误 / 小麦连杆时挑衅）
+    // 通用嘲讽（玩家单纯没进球/打丢，没犯规）—— 不含"白球/犯规"字眼
     taunt: [
       { audio:'./assets/voice/xiaomai/taunt_01_yanke.mp3',  text:'你这准头，建议去挂下眼科' },
       { audio:'./assets/voice/xiaomai/taunt_02_biyan.wav',  text:'哈哈哈哈，我闭着眼都能比你打得好，真的' },
-      { audio:'./assets/voice/xiaomai/taunt_03_songfen.wav',text:'哎呀又给我送分了，那我可就不客气啦~' },
       { audio:'./assets/voice/xiaomai/taunt_04_fengge.wav', text:'你这杆打得，怎么说呢，很有个人风格' },
       { audio:'./assets/voice/xiaomai/taunt_05_dadiu.wav',  text:'不是吧，这都能打丢？' },
+    ],
+    // 小麦自己连杆进球时的得瑟（"送分"= 对方送分给我）
+    brag: [
+      { audio:'./assets/voice/xiaomai/taunt_03_songfen.wav',text:'哎呀又给我送分了，那我可就不客气啦~' },
     ],
     // 卖萌/撒娇（小麦没进球 / 落后时）
     cute: [
@@ -206,15 +209,19 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xiaomai/lose_02_shouhua.wav', text:'再来一局！刚才那是手滑，手滑懂吗' },
       { audio:'./assets/voice/xiaomai/lose_03_rangju.wav',  text:'哼，让你一局而已，别得意太早啊喂' },
     ],
-    // 玩家犯规
-    on_player_foul: [
+    // 玩家犯规 —— 按犯规类型细分，确保"母球落袋""空杆"只在对应犯规时播
+    pfoul_cue: [   // 玩家母球落袋专属
       { audio:'./assets/voice/xiaomai/pfoul_01_muqiu.wav',     text:'哎呀母球进袋了…它是不是觉得你的技术配不上它' },
-      { audio:'./assets/voice/xiaomai/pfoul_02_konggan.wav',   text:'空杆？！你是来打球的还是来给白球做按摩的？' },
-      { audio:'./assets/voice/xiaomai/pfoul_03_huanwo.wav',    text:'哇哦犯规了！这下换我了嘿嘿嘿' },
       { audio:'./assets/voice/xiaomai/pfoul_04_huanzhuren.wav',text:'哎呀，白球都进去了…它可能想换个主人' },
+    ],
+    pfoul_empty: [ // 玩家空杆专属
+      { audio:'./assets/voice/xiaomai/pfoul_02_konggan.wav',   text:'空杆？！你是来打球的还是来给白球做按摩的？' },
+    ],
+    pfoul_other: [ // 玩家其它犯规（先碰对方球/黑8 等）
+      { audio:'./assets/voice/xiaomai/pfoul_03_huanwo.wav',    text:'哇哦犯规了！这下换我了嘿嘿嘿' },
       { audio:'./assets/voice/xiaomai/pfoul_05_caipan.wav',    text:'犯规！裁判！他犯规了' },
     ],
-    // 小麦自己犯规
+    // 小麦自己犯规（找借口）
     on_bot_foul: [
       { audio:'./assets/voice/xiaomai/bfoul_01_bug.wav',       text:'咳咳…刚才那杆当我没打过，系统bug，绝对是bug' },
       { audio:'./assets/voice/xiaomai/bfoul_02_chishenme.wav', text:'啊这…那个，我刚刚在想今晚吃什么来着' },
@@ -495,7 +502,9 @@ const Character = (() => {
 
     // 语音被冷却挡下：默认安静（只留表情）；显式允许时退化为文字气泡
     if (bubble){
-      const lines = (VOICE_LINES[id] && VOICE_LINES[id][category]) || [];
+      // 优先用台词库；没有对应分类则回退到 VOICE_CLIPS 的字幕文本
+      let lines = (VOICE_LINES[id] && VOICE_LINES[id][category]) || [];
+      if (!lines.length && clips.length) lines = clips.map(c => c.text);
       if (lines.length) showBubble(pickNoRepeat(lines, id + ':t:' + category), 3400, force);
     }
   }
@@ -1701,25 +1710,32 @@ function resolveShot(){
     // 犯规 toast 已在第 1 步按"谁犯规"组装好
     showToast(foulToast, 'foul');
     State.runStreak[sideKey] = 0;
-    // 角色反应（犯规是"大事"，优先播语音；冷却挡下则退化为文字气泡）
-    if (me) Character.say('on_player_foul', 'smug', { voiceChance:1, bubble:true });  // 玩家犯规 → 挑衅
-    else    Character.say('on_bot_foul',    'pout', { voiceChance:1, bubble:true });  // 小麦犯规 → 找借口
+    if (me){
+      // 玩家犯规 → 小麦挑衅，按犯规类型播对应专属语音
+      let cat = 'pfoul_other';
+      if (foulReason === '母球落袋') cat = 'pfoul_cue';
+      else if (foulReason === '空杆') cat = 'pfoul_empty';
+      Character.say(cat, 'smug', { voiceChance:1, bubble:true });
+    } else {
+      // 小麦自己犯规 → 找借口（只有真 foul 才会进这里）
+      Character.say('on_bot_foul', 'pout', { voiceChance:1, bubble:true });
+    }
     switchTurn(me ? 'bot' : 'me');
   } else if (pocketedOwn){
     // 进了自己球 → 续杆
     State.runStreak[sideKey] += 1;
     showToast(`${shooterName}进球了，继续击球`, 'ok');
-    // 角色反应：玩家进球 → 夸赞（60% 语音）；小麦进球 → 嘚瑟挑衅（70% 语音）
+    // 玩家进球 → 夸赞；小麦进球 → 得瑟"送分"(brag)
     if (me) Character.say('praise', 'happy', { voiceChance:0.6 });
-    else    Character.say('taunt',  'smug',  { voiceChance:0.7 });
+    else    Character.say('brag',   'smug',  { voiceChance:0.6 });
     continueTurn(me ? 'me' : 'bot');
   } else {
-    // 没进球 → 换手
+    // 没进球（没犯规，单纯打丢）→ 换手
     State.runStreak[sideKey] = 0;
     showToast(`现在${nextTurnTip}`, 'info');
-    // 角色反应：玩家没进 → 小麦偶尔卖萌挑衅（35% 语音）；小麦自己没进 → 撒娇（35% 语音）
-    if (me) Character.say('taunt', 'smug', { voiceChance:0.35 });
-    else    Character.say('cute',  'cute', { voiceChance:0.35 });
+    // 玩家打丢 → 通用嘲讽(taunt，不含犯规字眼)；小麦自己打丢 → 撒娇
+    if (me) Character.say('taunt', 'smug', { voiceChance:0.4 });
+    else    Character.say('cute',  'cute', { voiceChance:0.4 });
     switchTurn(me ? 'bot' : 'me');
   }
 }
@@ -2050,7 +2066,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626a loaded');
+  console.log('[game_final.js] v=20240626b loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
