@@ -428,12 +428,16 @@ const Character = (() => {
   function pick(arr){ return arr[(Math.random()*arr.length)|0]; }
 
   // 切换立绘表情；duration 后回到 idle
+  // mood: idle/happy/cute/smug/pout → 切 .char-frame 的 mood-* class
+  const MOOD_CLASS = { idle:'mood-happy', happy:'mood-happy', cute:'mood-cute', smug:'mood-smug', pout:'mood-pout' };
   function setMood(mood, holdMs = 3500){
-    const img = document.getElementById('char-avatar');
-    const prof = State.botProfile;
-    if (!img || !prof || !prof.avatars) return;
-    const src = prof.avatars[mood] || prof.avatars.idle;
-    if (src && img.getAttribute('src') !== src) img.setAttribute('src', src);
+    const frame = document.getElementById('char-frame');
+    if (!frame) return;
+    const cls = MOOD_CLASS[mood] || 'mood-happy';
+    if (!frame.classList.contains(cls)){
+      frame.classList.remove('mood-happy','mood-cute','mood-smug','mood-pout');
+      frame.classList.add(cls);
+    }
     clearTimeout(_moodTimer);
     if (holdMs > 0){
       _moodTimer = setTimeout(()=> setMood('idle', 0), holdMs);
@@ -2066,7 +2070,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626b loaded');
+  console.log('[game_final.js] v=20240626c loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){

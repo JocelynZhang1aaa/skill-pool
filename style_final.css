@@ -915,26 +915,40 @@ html, body{
   pointer-events: none;       /* 不挡操作 */
   overflow: visible;          /* 气泡可溢出容器向左展开 */
 }
-/* 圆形头像框：描边 + 渐变底 + 阴影，立绘裁进圆里 */
+/* 圆形头像框：背景图渲染，每个情绪用 background-position 把脸对准圆心 */
 .char-frame{
   position: absolute;
   inset: 0;
   border-radius: 50%;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 35%, #2a3148 0%, #161b29 100%);
+  background-color: #161b29;
+  background-repeat: no-repeat;
+  /* background-image / position / size 由 .mood-* 提供 */
   border: 2.5px solid rgba(255,255,255,0.92);
   box-shadow: 0 4px 14px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.3);
   transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
 }
-.char-avatar{
-  position: absolute;
-  left: 50%;
-  bottom: -10px;              /* 立绘下沉，让头/脸落在圆框中上部 */
-  transform: translateX(-50%);
-  width: 108%;                /* 略放大，填满圆框、突出面部 */
-  height: auto;
-  object-fit: contain;
-  object-position: bottom center;
+/* 每张立绘单独标定脸部中心（X%/Y% = 脸中心在原图的位置）
+   background-size 控制脸在圆框里的大小（越大脸越大） */
+.char-frame.mood-happy{
+  background-image: url('./assets/xiaomai-happy.png');
+  background-position: 47% 36%;
+  background-size: 175%;
+}
+.char-frame.mood-cute{
+  background-image: url('./assets/xiaomai-cute.png');
+  background-position: 39% 33%;
+  background-size: 185%;
+}
+.char-frame.mood-smug{
+  background-image: url('./assets/xiaomai-smug.png');
+  background-position: 48% 30%;
+  background-size: 195%;
+}
+.char-frame.mood-pout{
+  background-image: url('./assets/xiaomai-pout.png');
+  background-position: 49% 32%;
+  background-size: 195%;
 }
 /* 说话时圆框轻微放大"探头" */
 .char-stage.talking .char-frame{
