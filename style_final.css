@@ -907,11 +907,11 @@ html, body{
    ========================================= */
 .char-stage{
   position: absolute;
-  top: 6px;
+  top: 22px;                  /* 整体往下移 */
   right: 8px;
   z-index: 7;
-  width: 64px;
-  height: 64px;
+  width: 78px;                /* 头像框放大：64 → 78 */
+  height: 78px;
   pointer-events: none;       /* 不挡操作 */
   overflow: visible;          /* 气泡可溢出容器向左展开 */
 }
@@ -944,19 +944,19 @@ html, body{
 /* 台词气泡：黑描边漫画对话框（参考用户提供样式），从立绘左侧弹出 */
 .char-bubble{
   position: absolute;
-  right: 56px;               /* 贴在圆框左边 */
-  top: 8px;
+  right: 70px;               /* 贴在圆框左边（跟随放大） */
+  top: 10px;
   width: max-content;        /* 按内容自适应宽度，避免被父容器挤成竖排 */
-  max-width: 176px;          /* 上限，超出才换行（缩小） */
-  min-width: 56px;
-  padding: 7px 11px;         /* 内边距收紧 */
+  max-width: 162px;          /* 上限，超出才换行 */
+  min-width: 52px;
+  padding: 6px 10px;         /* 内边距再收紧 */
   background: #ffffff;
   color: #1a1a1a;
-  font-size: 10.5px;         /* 文本缩小 */
+  font-size: 9.5px;          /* 文字再缩小 */
   line-height: 1.4;
   font-weight: 600;
   border: 2px solid #111;               /* 描边略细 */
-  border-radius: 16px;                  /* 圆角随之缩小 */
+  border-radius: 14px;                  /* 圆角随之缩小 */
   box-shadow: 0 3px 10px rgba(0,0,0,0.22);
   opacity: 0;
   transform: translateX(8px) scale(0.9);
