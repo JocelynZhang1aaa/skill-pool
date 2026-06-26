@@ -307,9 +307,6 @@ let _lastSettleCheck = 0;
 // Shot context (for rule engine)
 let _shotCtx = null;
 
-// 落袋动画队列：球进袋后播放"滚入袋心 + 缩小坠落"过渡，结束才真正移除渲染
-// 每项: { ball, fromX, fromY, toX, toY, ang, t0, dur }
-let _pocketAnims = [];
 
 /* ================================================================
    4. AUDIO
@@ -1306,7 +1303,6 @@ function gameLoop(ts){
   // Render
   renderTable();
   renderBalls();
-  renderPocketAnims();           // 落袋"滚入坠落"过渡（画在球层之后）
   stepImpacts();
 
   // Settle 检测保留 throttled
@@ -1507,20 +1503,7 @@ function checkPockets(){
 function pocketBall(b, pk){
   if (b.pocketed) return;  // 防止重入
   b.pocketed = true;
-
-  // 启动落袋动画：记录入袋瞬间的位置/朝向，之后由 renderPocketAnims 画"滚入坠落"过渡
   if (b.body){
-    const px = b.body.position.x, py = b.body.position.y;
-    _pocketAnims.push({
-      id: b.id,
-      num: b.num,
-      isCue: b.id === 'cue',
-      fromX: px, fromY: py,
-      toX: pk.x, toY: pk.y,        // 朝袋心收拢
-      ang: b._ang || 0,
-      t0: performance.now(),
-      dur: 150                     // 动画时长 ms（加快坠落）
-    });
     Matter.World.remove(world, b.body);
     b.body = null;
   }
@@ -1531,34 +1514,6 @@ function pocketBall(b, pk){
     updateHUDBalls();
   }
   // 母球落袋不再自动复位 — 由 resolveShot 在判完犯规、切换回合时统一复位
-}
-
-// 渲染落袋动画（在球层之后、每帧调用）：球朝袋心移动 + 缩小 + 变暗坠落
-function renderPocketAnims(){
-  if (!ctx || !_pocketAnims.length) return;
-  const now = performance.now();
-  const R = TABLE.ballR;
-  _pocketAnims = _pocketAnims.filter(a => {
-    const off = ballCache[a.id];
-    let t = (now - a.t0) / a.dur;
-    if (t >= 1 || !off) return false;   // 动画完成 → 移除
-    // 缓动：快速被吸向袋心，更早开始缩小（更干脆的坠落）
-    const ease = t < 0.5 ? (t*2)*(t*2)*0.5 : 1 - Math.pow(-2*t+2,2)/2;
-    const cx = a.fromX + (a.toX - a.fromX) * ease;
-    const cy = a.fromY + (a.toY - a.fromY) * ease;
-    // 尺寸：t>0.25 起快速缩小到 0（掉进洞里）
-    const scale = t < 0.25 ? 1 : 1 - ((t - 0.25) / 0.75);
-    const d = R * 2 * Math.max(0, scale);
-    if (d < 1) return true;             // 太小就不画，但保留到 t>=1 再移除
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(a.ang + t * 1.4);        // 入袋时再转一点，强化滚入感
-    // 整体变暗（坠入洞中）
-    ctx.globalAlpha = Math.max(0, 1 - t * 0.85);
-    ctx.drawImage(off, -d/2, -d/2, d, d);
-    ctx.restore();
-    return true;
-  });
 }
 
 // 母球复位（由 resolveShot 调用）
@@ -2099,8 +2054,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626g loaded');
-  try { window.__pocketAnimsLen = () => _pocketAnims.length; } catch(e){}
+  console.log('[game_final.js] v=20240626h loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
@@ -2137,7 +2091,6 @@ function init(){
       State.shotHistory = []; State.breakPocketed = []; State.reported = false;
       State._endReason = ''; State.startTs = Date.now(); State.shotSeq = 0;
       _shotCtx = null; _stillFrames = 0; _settleGuard = false;
-      _pocketAnims = [];
       if (!State.runStreak) State.runStreak = { me:0, bot:0 };
       initEngine(); setupRack(); updateTurnUI(); showGroupBanner();
       Character.resetRepeat();  // 新一局清空语音防重复记录
