@@ -312,7 +312,6 @@ let _shotCtx = null;
    ================================================================ */
 const AudioFx = (() => {
   let actx = null, noiseBuf = null;
-  let _unlocked = false;
   function ensure(){
     if (!actx){
       try { actx = new (window.AudioContext||window.webkitAudioContext)(); }
@@ -325,21 +324,6 @@ const AudioFx = (() => {
     if (actx.state==='suspended') actx.resume();
     return actx;
   }
-  // iOS 解锁：必须在用户手势同步栈里 1) resume 2) 播一个静音 buffer 走一遍输出链路
-  // 仅 resume 在部分 iOS/微信 上不足以真正放行后续 BufferSource
-  function unlock(){
-    const c = ensure(); if (!c) return;
-    try {
-      const buf = c.createBuffer(1, 1, c.sampleRate);
-      const src = c.createBufferSource();
-      src.buffer = buf;
-      src.connect(c.destination);
-      if (src.start) src.start(0); else if (src.noteOn) src.noteOn(0);
-    } catch(e){}
-    if (c.state === 'suspended') c.resume();
-    _unlocked = true;
-  }
-  function isUnlocked(){ return _unlocked && actx && actx.state === 'running'; }
   function tone({freq=800, dur=0.08, type='sine', vol=0.3, filterFreq=null}){
     const c = ensure(); if (!c) return;
     const osc = c.createOscillator();
@@ -374,8 +358,6 @@ const AudioFx = (() => {
   return {
     init: ensure,
     ctx: () => actx,          // 暴露 AudioContext，供小麦语音共用同一音频会话
-    unlock,                   // iOS 手势解锁
-    isUnlocked,
     cueHit(power){
       const f = 280 + power*260;
       tone({freq:f, dur:0.13, type:'triangle', vol:0.4, attack:0.001, decay:0.11, filterFreq:2000});
@@ -432,10 +414,9 @@ const Character = (() => {
     return p;
   }
 
-  // 解锁：用户手势内 解锁共用 AudioContext（含静音 buffer 走一遍输出），并预解码全部语音
+  // 解锁：用户手势内 resume AudioContext（Web Audio 解锁），并预解码全部语音
   function unlock(){
-    AudioFx.unlock();                       // iOS：resume + 静音 buffer
-    const c = AudioFx.ctx();
+    const c = AudioFx.init();               // 确保 AudioContext 创建 + resume
     if (!c) return;
     // 预加载所有小麦语音，避免首次播放时的解码延迟
     const clips = VOICE_CLIPS.xiaomai || {};
@@ -500,12 +481,10 @@ const Character = (() => {
     if (!force && now - _lastVoiceAt < VOICE_COOLDOWN) return false;
     const c = AudioFx.ctx() || AudioFx.init();
     if (!c) return false;
-    if (c.state === 'suspended') c.resume();   // iOS 可能在交互间隙挂起，播放前再 resume
     _lastVoiceAt = now;
     loadBuffer(clip.audio).then(buf => {
       if (_muted) return;
       try {
-        if (c.state === 'suspended') c.resume();
         if (_curSrc){ try{ _curSrc.stop(); }catch(e){} _curSrc = null; }
         const src = c.createBufferSource();
         src.buffer = buf;
@@ -2063,7 +2042,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240627b loaded');
+  console.log('[game_final.js] v=20240627a loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
@@ -2126,24 +2105,8 @@ function init(){
   setTimeout(()=> showToast('你先开球吧', 'info'), 400);
   requestAnimationFrame(gameLoop);
 
-  // 开声遮罩：点一下 → 解锁音频 + 播一声确认音效 + 进入；之后才弹新手引导
-  const gate = document.getElementById('sound-gate');
-  const gateBtn = document.getElementById('sound-gate-btn');
-  const enterGame = () => {
-    // 必须在这个真实手势里同步解锁
-    AudioFx.unlock();
-    Character.unlock();
-    // 播一声确认音效（让用户立刻听到"有声音了"）
-    try { AudioFx.cueHit(0.5); } catch(e){}
-    if (gate) gate.classList.add('hide');
-    // 进入后再弹新手引导
-    Guide.init();
-  };
-  if (gate){
-    gate.addEventListener('click', enterGame, { once:true });
-  } else {
-    Guide.init();
-  }
+  // 新手引导：首次进入自动弹；问号按钮随时可重看
+  Guide.init();
 }
 
 /* ================================================================
