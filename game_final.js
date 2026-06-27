@@ -393,8 +393,8 @@ const Character = (() => {
   // 冷却控制：避免连珠炮
   let _lastBubbleAt = 0;
   let _lastVoiceAt  = 0;
-  const BUBBLE_COOLDOWN = 2500;   // 两次气泡至少间隔 2.5s
-  const VOICE_COOLDOWN  = 3500;   // 两次真人语音至少间隔 3.5s（让小麦更爱说话）
+  const BUBBLE_COOLDOWN = 4500;   // 两次气泡至少间隔 4.5s
+  const VOICE_COOLDOWN  = 9000;   // 两次真人语音至少间隔 9s（每类都有语音了，可适当放宽频率）
 
   // 解码并缓存一个语音文件（返回 Promise<AudioBuffer>）；_loading 去重并发请求
   const _loading = {};
@@ -512,7 +512,7 @@ const Character = (() => {
     const id = State.botProfile && State.botProfile.id;
     if (id !== 'xiaomai') return;  // 目前只有小麦有素材
 
-    const { voiceChance = 1, bubble = true, force = false } = opts;
+    const { voiceChance = 1, bubble = false, force = false } = opts;
 
     // 表情总是切换（纯视觉反馈，不吵）
     setMood(mood, 3800);
@@ -527,7 +527,7 @@ const Character = (() => {
       }
     }
 
-    // 语音被冷却挡下 → 退化为文字气泡（默认开启，保证玩家总有反馈）
+    // 语音被冷却挡下：默认安静（只留表情）；显式允许时退化为文字气泡
     if (bubble){
       // 优先用台词库；没有对应分类则回退到 VOICE_CLIPS 的字幕文本
       let lines = (VOICE_LINES[id] && VOICE_LINES[id][category]) || [];
@@ -1701,17 +1701,17 @@ function resolveShot(){
     // 进了自己球 → 续杆
     State.runStreak[sideKey] += 1;
     showToast(`${shooterName}进球了，继续击球`, 'ok');
-    // 玩家进球 → 夸赞；小麦进球 → 得瑟"送分"(brag)。提高出声率
-    if (me) Character.say('praise', 'happy', { voiceChance:0.9 });
-    else    Character.say('brag',   'smug',  { voiceChance:0.9 });
+    // 玩家进球 → 夸赞；小麦进球 → 得瑟"送分"(brag)
+    if (me) Character.say('praise', 'happy', { voiceChance:0.6 });
+    else    Character.say('brag',   'smug',  { voiceChance:0.6 });
     continueTurn(me ? 'me' : 'bot');
   } else {
     // 没进球（没犯规，单纯打丢）→ 换手
     State.runStreak[sideKey] = 0;
     showToast(`现在${nextTurnTip}`, 'info');
-    // 玩家打丢 → 嘲讽"这都能打丢"(taunt)；小麦自己打丢 → 自嘲撒娇(cute)
-    if (me) Character.say('taunt', 'smug', { voiceChance:0.85 });
-    else    Character.say('cute',  'cute', { voiceChance:0.85 });
+    // 玩家打丢 → 嘲讽"这都能打丢"(taunt)；小麦自己打丢 → 自嘲撒娇(cute，不夸玩家)
+    if (me) Character.say('taunt', 'smug', { voiceChance:0.4 });
+    else    Character.say('cute',  'cute', { voiceChance:0.4 });
     switchTurn(me ? 'bot' : 'me');
   }
 }
@@ -2042,7 +2042,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240627a loaded');
+  console.log('[game_final.js] v=20240626l loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
