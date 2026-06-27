@@ -357,7 +357,6 @@ const AudioFx = (() => {
   }
   return {
     init: ensure,
-    ctx: () => actx,          // 暴露 AudioContext，供小麦语音共用同一音频会话
     cueHit(power){
       const f = 280 + power*260;
       tone({freq:f, dur:0.13, type:'triangle', vol:0.4, attack:0.001, decay:0.11, filterFreq:2000});
@@ -383,10 +382,8 @@ const AudioFx = (() => {
    4b. CHARACTER — 小麦立绘 / 气泡台词 / 真人语音
    ================================================================ */
 const Character = (() => {
-  // 小麦语音改为走 Web Audio（与打球音效共用同一个 AudioContext / 音频会话）
-  // 否则 iOS 上 HTML5 <audio> 播放会打断 Web Audio 的打球音效
-  let _bufCache = {};      // url -> decoded AudioBuffer
-  let _curSrc = null;      // 当前播放的 BufferSource（便于打断）
+  let _audio = null;       // 复用的单个 <audio> 元素（手机端解锁后可异步播放）
+  let _unlocked = false;   // 语音通道是否已被用户手势解锁
   let _bubbleTimer = null;
   let _moodTimer = null;
   let _muted = false;
@@ -396,31 +393,31 @@ const Character = (() => {
   const BUBBLE_COOLDOWN = 4500;   // 两次气泡至少间隔 4.5s
   const VOICE_COOLDOWN  = 9000;   // 两次真人语音至少间隔 9s（每类都有语音了，可适当放宽频率）
 
-  // 解码并缓存一个语音文件（返回 Promise<AudioBuffer>）；_loading 去重并发请求
-  const _loading = {};
-  function loadBuffer(url){
-    if (_bufCache[url]) return Promise.resolve(_bufCache[url]);
-    if (_loading[url]) return _loading[url];
-    const c = AudioFx.ctx() || AudioFx.init();
-    if (!c) return Promise.reject();
-    const p = fetch(url)
-      .then(r => r.arrayBuffer())
-      .then(ab => new Promise((res, rej) => {
-        // Safari 老接口用回调式 decodeAudioData
-        c.decodeAudioData(ab, (buf)=>{ _bufCache[url] = buf; delete _loading[url]; res(buf); }, (e)=>{ delete _loading[url]; rej(e); });
-      }))
-      .catch(e => { delete _loading[url]; throw e; });
-    _loading[url] = p;
-    return p;
+  // 懒创建复用的 audio 元素
+  function ensureAudio(){
+    if (!_audio){
+      _audio = new Audio();
+      _audio.preload = 'auto';
+      _audio.volume = 0.95;
+      _audio.setAttribute('playsinline', '');     // iOS 必须，避免全屏接管
+      _audio.setAttribute('webkit-playsinline', '');
+    }
+    return _audio;
   }
 
-  // 解锁：用户手势内 resume AudioContext（Web Audio 解锁），并预解码全部语音
+  // 手机端音频解锁：必须在"用户手势"同步栈里调用一次 play()
+  // 用同一个 audio 元素静音播一个空 src 完成解锁，之后异步换 src 就能放行
   function unlock(){
-    const c = AudioFx.init();               // 确保 AudioContext 创建 + resume
-    if (!c) return;
-    // 预加载所有小麦语音，避免首次播放时的解码延迟
-    const clips = VOICE_CLIPS.xiaomai || {};
-    Object.values(clips).forEach(arr => arr.forEach(cl => { loadBuffer(cl.audio).catch(()=>{}); }));
+    if (_unlocked) return;
+    const a = ensureAudio();
+    const prevMuted = a.muted;
+    a.muted = true;
+    // 极短静音 data-uri（合法 wav 头），play 成功即解锁
+    a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+    const p = a.play();
+    const done = () => { try{ a.pause(); a.currentTime = 0; }catch(e){} a.muted = prevMuted; _unlocked = true; };
+    if (p && p.then){ p.then(done).catch(()=>{ a.muted = prevMuted; }); }
+    else done();
   }
 
   // 防重复：记录每个分类上一次抽到的索引，避免同一局连续触发同一条
@@ -474,29 +471,22 @@ const Character = (() => {
     return true;
   }
 
-  // 播放真人语音（走 Web Audio，与打球音效同一会话，不会互相打断）
+  // 播放真人语音（复用单个已解锁的 audio 元素，仅换 src）
   function playClip(clip, force = false){
     if (_muted || !clip || !clip.audio) return false;
     const now = Date.now();
     if (!force && now - _lastVoiceAt < VOICE_COOLDOWN) return false;
-    const c = AudioFx.ctx() || AudioFx.init();
-    if (!c) return false;
-    _lastVoiceAt = now;
-    loadBuffer(clip.audio).then(buf => {
-      if (_muted) return;
-      try {
-        if (_curSrc){ try{ _curSrc.stop(); }catch(e){} _curSrc = null; }
-        const src = c.createBufferSource();
-        src.buffer = buf;
-        const g = c.createGain();
-        g.gain.value = 0.95;
-        src.connect(g); g.connect(c.destination);
-        src.start(0);
-        _curSrc = src;
-        src.onended = () => { if (_curSrc === src) _curSrc = null; };
-      } catch(e){}
-    }).catch(()=>{});
-    return true;
+    try {
+      const a = ensureAudio();
+      a.muted = false;
+      a.pause();
+      a.src = clip.audio;
+      a.currentTime = 0;
+      const p = a.play();
+      if (p && p.catch) p.catch(()=>{}); // 仍可能被拦（如未解锁），静默
+      _lastVoiceAt = now;
+      return true;
+    } catch(e){ return false; }
   }
 
   /**
@@ -536,14 +526,14 @@ const Character = (() => {
     }
   }
 
-  function toggleMute(){ _muted = !_muted; if (_muted && _curSrc){ try{ _curSrc.stop(); }catch(e){} _curSrc = null; } return _muted; }
+  function toggleMute(){ _muted = !_muted; if (_muted && _audio){ _audio.pause(); } return _muted; }
 
   return { say, setMood, showBubble, toggleMute, resetRepeat, unlock };
 })();
 // 暴露到 window，便于静音开关 / 调试触发
 try { window.Character = Character; } catch(e){}
 
-// 首次用户手势：解锁共用的 AudioContext（打球音效 + 小麦语音都走它）
+// 首次用户手势：同时解锁 Web Audio(打球音效) 和 HTML5 Audio(小麦语音)
 ['pointerdown','touchstart','click'].forEach(ev =>
   document.addEventListener(ev, ()=>{ AudioFx.init(); Character.unlock(); }, {once:true, passive:true}));
 
@@ -2042,7 +2032,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240626l loaded');
+  console.log('[game_final.js] v=20240626k loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
