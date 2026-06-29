@@ -43,8 +43,9 @@ const angDiff = (a, b) => {
 const BOT_PROFILES = {
   xiaomai: {
     id:'xiaomai', name:'小麦', emoji:'🌾',
-    skill: { angle_precision:0.50, safety:0.20, power_min:0.30, power_max:0.75 },
-    win_rate: 0.50,
+    // 中等偏强：力度有劲不绵软，精度够用，有挑战性
+    skill: { angle_precision:0.72, safety:0.20, power_min:0.50, power_max:0.90 },
+    win_rate: 0.62,
     // 立绘（按情绪切换）
     avatars: {
       idle:  './assets/xiaomai-happy.png',  // 默认 / 待机
@@ -2058,7 +2059,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240629b loaded');
+  console.log('[game_final.js] v=20240629c loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
