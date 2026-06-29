@@ -44,8 +44,7 @@ npx serve .
 
 ```
 skill-pool-v3/
-├── index.html              # 正式入口
-├── index_final.html        # 开发入口（最新功能）
+├── index.html             # 游戏入口（GitHub Pages 入口）
 ├── game_final.js          # 核心游戏逻辑
 ├── style_final.css        # 样式
 ├── assets/
