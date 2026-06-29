@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>桌球对局 · skill-pool v4 (final)</title>
-<link rel="stylesheet" href="./style_final.css?v=20240628a" />
+<link rel="stylesheet" href="./style_final.css?v=20240629a" />
 </head>
 <body>
 
@@ -134,16 +134,25 @@
 
   </main>
 
-  <!-- 游戏结束弹窗 -->
+  <!-- 游戏结束弹窗（可爱风：奖牌横幅 + 拍立得立绘 + 点评） -->
   <div class="game-over-mask" id="game-over-mask">
-    <div class="game-over-card">
-      <div class="game-over-icon" id="game-over-icon"></div>
-      <div class="game-over-title" id="game-over-title"></div>
-      <div class="game-over-reason" id="game-over-reason"></div>
-      <div class="game-over-btns">
-        <button class="btn-game-restart" id="btn-game-restart">再来一次</button>
-        <button class="btn-game-cancel" id="btn-game-cancel">取消</button>
+    <div class="game-over-card" id="game-over-card">
+      <!-- 顶部横幅奖牌 -->
+      <div class="go-banner" id="go-banner"><span id="go-banner-text">胜利</span></div>
+      <!-- 拍立得照片：图钉 + 小麦立绘 -->
+      <div class="go-photo" id="go-photo">
+        <span class="go-pin"></span>
+        <div class="go-photo-inner">
+          <img class="go-avatar" id="go-avatar" src="./assets/xiaomai-pout.png" alt="小麦" />
+        </div>
       </div>
+      <!-- 主标题（是胜利啊！/ 不小心失败啦..） -->
+      <div class="go-title" id="game-over-title"></div>
+      <!-- 小麦点评 -->
+      <div class="go-comment" id="game-over-reason"></div>
+      <!-- 按钮 -->
+      <button class="btn-game-restart" id="btn-game-restart">再 来 一 次</button>
+      <button class="btn-game-cancel" id="btn-game-cancel">看看牌局</button>
     </div>
   </div>
 
@@ -151,6 +160,6 @@
 </div><!-- /.stage-frame -->
 
 <script src="./matter.min.js"></script>
-<script src="./game_final.js?v=20240628a"></script>
+<script src="./game_final.js?v=20240629a"></script>
 </body>
 </html>

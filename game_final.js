@@ -1999,30 +1999,66 @@ function reportMatch(kind){
 // 暴露便于调试 / 外部触发回传
 try { window.__poolReport = { buildSummaryText, reportMatch, Reporter }; window.__poolState = State; } catch(e){}
 
+// 结果页点评文案（多条随机抽）
+const GAMEOVER_COMMENTS = {
+  // 用户赢（小麦输）—— 小麦不服 / 嘴硬
+  win: [
+    '算你厉害！！这局让你了哼',
+    '可恶…下次绝对不会让你赢了！',
+    '哼，运气好罢了，再来一局啊！',
+    '不许得意！我只是手感没来而已',
+    '好吧好吧你赢了，但本小姐很快就会反超的',
+  ],
+  // 用户输（小麦赢）—— 小麦得瑟 / 挑衅
+  lose: [
+    '就你还要单挑？回去多练练吧 honey',
+    '嘻嘻~ 这就是实力的差距哦',
+    '太弱啦太弱啦，给我表演杂技呢？',
+    '下次记得先充钱…啊不是，先练习',
+    '本小姐果然天下无敌！快说小麦最厉害~',
+  ],
+};
+
 function endMatch(result, reason){
   State.ended = true;
   State.result = result;
   State._endReason = reason || '';
   // 对局结果回传（summary_text 通过 content 字段）
   reportMatch('end');
+
   // 角色反应：玩家赢 = 小麦输（委屈）；玩家输 = 小麦赢（嘚瑟）。终局是大事，force 弹气泡
   if (result === 'win') Character.say('on_lose', 'pout', { bubble:true, force:true });
   else                  Character.say('on_win', 'smug', { bubble:true, force:true });
-  const icon  = document.getElementById('game-over-icon');
-  const title = document.getElementById('game-over-title');
-  const rEl   = document.getElementById('game-over-reason');
-  const mask  = document.getElementById('game-over-mask');
-  if (icon)  icon.textContent  = result === 'win' ? '🎉' : '😢';
-  if (title) title.textContent = result === 'win' ? '恭喜🎉 你赢了～' : '你输了。';
-  if (rEl)   rEl.textContent  = reason || '';
-  if (mask)  mask.classList.add('active');
+
+  const card   = document.getElementById('game-over-card');
+  const banner = document.getElementById('go-banner-text');
+  const avatar = document.getElementById('go-avatar');
+  const title  = document.getElementById('game-over-title');
+  const rEl    = document.getElementById('game-over-reason');
+  const mask   = document.getElementById('game-over-mask');
+
+  const win = (result === 'win');
+  if (card){
+    card.classList.remove('win', 'lose');
+    card.classList.add(win ? 'win' : 'lose');
+  }
+  if (banner) banner.textContent = win ? '胜 利' : '失 败';
+  // 用户赢 → 小麦委屈(pout)；用户输 → 小麦得意(smug)
+  if (avatar) avatar.src = win ? './assets/xiaomai-pout.png' : './assets/xiaomai-smug.png';
+  if (title)  title.textContent = win ? '是胜利啊！' : '不小心失败啦..';
+  // 随机抽一条点评
+  if (rEl){
+    const pool = GAMEOVER_COMMENTS[result] || [];
+    rEl.textContent = pool.length ? pool[(Math.random()*pool.length)|0] : (reason || '');
+  }
+  if (mask) mask.classList.add('active');
 }
 
 /* ================================================================
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240628a loaded');
+  console.log('[game_final.js] v=20240629a loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){

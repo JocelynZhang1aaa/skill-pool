@@ -749,64 +749,165 @@ html, body{
 }
 
 /* =========================================
-   游戏结束弹窗
+   游戏结束弹窗（可爱风：横幅奖牌 + 拍立得立绘 + 点评）
    ========================================= */
 .game-over-mask{
   position: absolute; inset: 0;
-  background: rgba(8, 12, 22, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(20, 14, 10, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 70;
   display: none;
   place-items: center;
   animation: bubble-in 0.22s ease;
 }
 .game-over-mask.active{ display: grid; }
+
 .game-over-card{
-  background: rgba(20, 28, 48, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-  border-radius: 18px;
-  padding: 32px 36px 24px;
+  position: relative;
+  width: 300px;
+  max-width: 86vw;
+  background: linear-gradient(180deg, #fff7ec 0%, #fdeed6 100%);
+  border-radius: 24px;
+  padding: 46px 22px 22px;
   text-align: center;
-  color: #f0f4ff;
-  min-width: 220px;
-  animation: intro-card-in 0.4s ease;
+  box-shadow: 0 18px 48px rgba(60, 40, 20, 0.5);
+  animation: go-pop 0.42s cubic-bezier(.34,1.56,.64,1);
 }
-.game-over-icon{ font-size: 48px; margin-bottom: 8px; }
-.game-over-title{
-  font-size: 22px; font-weight: 800;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
+@keyframes go-pop{
+  0%{ transform: scale(0.7) translateY(20px); opacity: 0; }
+  100%{ transform: scale(1) translateY(0); opacity: 1; }
 }
-.game-over-reason{
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 18px;
+
+/* 顶部横幅奖牌（缎带样式） */
+.go-banner{
+  position: absolute;
+  top: -22px; left: 50%;
+  transform: translateX(-50%);
+  min-width: 150px;
+  padding: 11px 30px;
+  font-size: 21px; font-weight: 900;
+  letter-spacing: 4px;
+  color: #fff;
+  border-radius: 8px;
+  white-space: nowrap;
+  text-shadow: 0 2px 3px rgba(0,0,0,0.28);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
 }
-.btn-game-restart{
-  height: 42px; padding: 0 32px;
-  border-radius: 21px; border: none;
-  background: linear-gradient(180deg, var(--accent-yellow) 0%, var(--accent-yellow-2) 100%);
-  color: #2a1d05;
-  font-size: 14px; font-weight: 800;
+/* 缎带两端的折角 */
+.go-banner::before, .go-banner::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0; height: 0;
+  border-style: solid;
+}
+.go-banner::before{ left: -12px; border-width: 14px 12px 14px 0; }
+.go-banner::after { right: -12px; border-width: 14px 0 14px 12px; }
+/* 胜利配色（暖橙金） */
+.game-over-card.win .go-banner{
+  background: linear-gradient(180deg, #ffb347 0%, #ff8c3b 100%);
+}
+.game-over-card.win .go-banner::before{ border-color: transparent #d96e1f transparent transparent; transform: translateY(-50%); }
+.game-over-card.win .go-banner::after { border-color: transparent transparent transparent #d96e1f; transform: translateY(-50%); }
+/* 失败配色（灰） */
+.game-over-card.lose .go-banner{
+  background: linear-gradient(180deg, #b8b3ad 0%, #8f8a84 100%);
+}
+.game-over-card.lose .go-banner::before{ border-color: transparent #6f6a64 transparent transparent; transform: translateY(-50%); }
+.game-over-card.lose .go-banner::after { border-color: transparent transparent transparent #6f6a64; transform: translateY(-50%); }
+
+/* 拍立得照片 */
+.go-photo{
+  position: relative;
+  width: 176px;
+  margin: 10px auto 14px;
+  background: #fffdf8;
+  border-radius: 8px;
+  padding: 10px 10px 14px;
+  box-shadow: 0 6px 16px rgba(80,55,30,0.28);
+  transform: rotate(-2deg);
+}
+.go-pin{
+  position: absolute;
+  top: -9px; left: 50%;
+  transform: translateX(-50%);
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6b6b 0%, #c92020 75%);
+  box-shadow: 0 3px 6px rgba(150,30,30,0.5);
+  z-index: 2;
+}
+.go-photo-inner{
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #ffe9c9 0%, #ffd9a8 100%);
+}
+.game-over-card.lose .go-photo-inner{
+  background: linear-gradient(160deg, #e8e4dd 0%, #d2cdc4 100%);
+}
+.go-avatar{
+  width: 118%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  margin-top: -6%;
+  object-fit: contain;
+}
+
+/* 主标题 */
+.go-title{
+  font-size: 23px; font-weight: 900;
+  margin-bottom: 8px;
   letter-spacing: 1px;
-  box-shadow: 0 4px 12px rgba(240, 167, 36, 0.4);
+}
+.game-over-card.win .go-title{ color: #e9692a; }
+.game-over-card.lose .go-title{ color: #8a8079; }
+
+/* 小麦点评（虚线框） */
+.go-comment{
+  font-size: 14px; font-weight: 700;
+  line-height: 1.5;
+  color: #9a6a3a;
+  background: rgba(255,255,255,0.55);
+  border: 1.5px dashed rgba(210,160,90,0.6);
+  border-radius: 12px;
+  padding: 9px 12px;
+  margin: 0 4px 18px;
+}
+.game-over-card.lose .go-comment{
+  color: #7a7068;
+  border-color: rgba(150,145,138,0.6);
+}
+
+/* 按钮 */
+.btn-game-restart{
+  display: block;
+  width: 100%;
+  height: 46px;
+  border-radius: 23px; border: none;
+  background: linear-gradient(180deg, #ff9d4d 0%, #f07d28 100%);
+  color: #fff;
+  font-size: 16px; font-weight: 800;
+  letter-spacing: 3px;
+  box-shadow: 0 5px 14px rgba(240,125,40,0.45);
   cursor: pointer;
+  margin-bottom: 8px;
 }
 .btn-game-restart:active{ transform: scale(0.97); }
-.game-over-btns{
-  display: flex; gap: 12px; justify-content: center;
-}
 .btn-game-cancel{
-  height: 42px; padding: 0 32px;
-  border-radius: 21px; border: 1px solid rgba(255,255,255,0.18);
+  display: block;
+  width: 100%;
+  height: 34px;
+  border-radius: 17px; border: none;
   background: transparent;
-  color: rgba(255,255,255,0.7);
-  font-size: 14px; font-weight: 600;
+  color: #b59067;
+  font-size: 13px; font-weight: 600;
   cursor: pointer;
 }
-.btn-game-cancel:active{ transform: scale(0.97); background: rgba(255,255,255,0.06); }
+.btn-game-cancel:active{ transform: scale(0.97); }
 
 /* =========================================
    小麦圆形头像框 + 气泡台词（右上角浮层）
