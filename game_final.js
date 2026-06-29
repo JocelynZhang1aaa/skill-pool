@@ -262,8 +262,12 @@ const PHYS = {
   minShotDuration: 600
 };
 
-// 出杆首发位置（开球后母球默认点）— 用于母球复位
-const CUE_DEFAULT = { x:200, y:600 };
+// 被撞球的"宽限期"帧数：刚发生球-球碰撞后这么多帧内，
+// 不对该球做低速阻尼/归零，给贴库球足够时间挣脱库边
+const HIT_GRACE_FRAMES = 30;
+
+// 出杆首发位置（开球点 / 犯规后母球复位点）— 与开球白球位置保持一致
+const CUE_DEFAULT = { x:200, y:660 };
 
 // Pocket config（简化为 2 段）：
 //   r        = visual radius (draw)
@@ -607,6 +611,10 @@ function initEngine(){
         const mid = { x:(bodyA.position.x+bodyB.position.x)/2, y:(bodyA.position.y+bodyB.position.y)/2 };
         spawnImpact(mid.x, mid.y, rel);
         recordContact(a, b);
+        // 刚被撞的球进入"宽限期"：此期间不被低速阻尼吞掉，
+        // 否则贴库球被撞后净速度低、会被 dampCreepingBalls 直接归零 → 看起来"打不动"
+        a._hitGrace = HIT_GRACE_FRAMES;
+        b._hitGrace = HIT_GRACE_FRAMES;
       }
     }
   });
@@ -759,19 +767,38 @@ function buildAllBallImages(){
 function setupRack(){
   State.balls = [];
   ballCache = {};
+  // —— 美式8球标准开球距离 ——
+  // 桌长 800：球堆“脚点”(尖角)约在台面 1/3 处(上半区)，白球在“厨房线”约 3/4 处(下半区)
   const cueBall = { id:'cue', num:0, type:'cue', pocketed:false };
-  cueBall.body = makeBallBody(200, 600);
+  cueBall.body = makeBallBody(CUE_DEFAULT.x, CUE_DEFAULT.y);  // 开球点(660)
   cueBall.body.ball = cueBall;
   State.balls.push(cueBall);
 
-  const apex = { x:200, y:240 };
-  const order = [1,11,3,13,8,6,9,4,12,5,14,2,7,10,15];
+  // 倒三角：尖角【朝下】正对白球；row 越大越往【上】展开成宽排
+  const apex = { x:200, y:330 };    // 尖角(脚点)上移 → 与白球(660)拉开约 11.8 球径
+  // 摆球规则：
+  //   ① 中心(row2 中央) = 黑8
+  //   ② 倒三角左斜边 全花色(stripe) / 右斜边 全全色(solid)
+  //   ③ 底排(最宽,最上) 两角一实一花
+  //   ④ 1-15 各一颗
+  //  13花14花 7实15花 5实   (row4 最宽,最上)
+  //    12花 1实 6实 4实     (row3)
+  //      11花 8⚫ 3实        (row2: 中心=8)
+  //        10花 2实         (row1)
+  //          9花            (row0 尖角,朝下对白球)
+  const order = [
+    9,
+    10, 2,
+    11, 8, 3,
+    12, 1, 6, 4,
+    13, 14, 7, 15, 5
+  ];
   let i=0;
   for (let row=0;row<5;row++){
     for (let col=0;col<=row;col++){
       const num = order[i++];
       const x = apex.x + (col-row/2)*(TABLE.ballR*2+0.5);
-      const y = apex.y + row*(TABLE.ballR*2*0.88);
+      const y = apex.y - row*(TABLE.ballR*2*0.88);  // 减号：往上展开 → 尖角朝下
       const b = {
         id: 'b'+num, num,
         type: num===8?'eight':(num<=7?'solid':'stripe'),
@@ -1148,7 +1175,7 @@ if (_cueBallBtn){
   _cueBallBtn.addEventListener('click', ()=>{
     if (State.turn!=='me'||State.ended) return;
     if (State.phase==='SHOOTING'||State.phase==='LOCKED') return;
-    Body.setPosition(State.cue.body, {x:200,y:600});
+    Body.setPosition(State.cue.body, {x:CUE_DEFAULT.x, y:CUE_DEFAULT.y});
     Body.setVelocity(State.cue.body, {x:0,y:0});
     Body.setAngularVelocity(State.cue.body, 0);
     setPower(0); setPhase('IDLE');
@@ -1195,6 +1222,7 @@ async function doShot(shooter, angle, power){
   const vx = Math.cos(angle)*v0;
   const vy = Math.sin(angle)*v0;
   Body.setVelocity(State.cue.body, {x:vx, y:vy});
+  State.cue._hitGrace = HIT_GRACE_FRAMES;   // 母球出杆也给宽限期
 
   _shotStartTime = performance.now();
 
@@ -1321,6 +1349,12 @@ function dampCreepingBalls(){
       }
     }
     if (nearPocket) continue;
+
+    // 宽限期内（刚被撞）：不阻尼，让贴库球能挣脱库边。每帧递减。
+    if (b._hitGrace && b._hitGrace > 0){
+      b._hitGrace--;
+      continue;
+    }
 
     const v = b.body.velocity;
     const speed = Math.hypot(v.x, v.y);
