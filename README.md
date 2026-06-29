@@ -38,8 +38,6 @@ npx serve .
 # 或直接用浏览器打开 index.html
 ```
 
-> 开发版本为 `index_final.html`，正式入口为 `index.html`（手动同步）。
-
 ## 项目结构
 
 ```
