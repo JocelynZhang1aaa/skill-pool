@@ -1757,13 +1757,32 @@ function botPlay(){
   }
 
   const profile = State.botProfile;
-  const targets = State.balls.filter(b=>!b.pocketed && b.id!=='cue' && b.body);
-  if (targets.length===0) return;
+  const allLive = State.balls.filter(b=>!b.pocketed && b.id!=='cue' && b.body);
+  if (allLive.length===0) return;
 
-  // Pick target ball
+  // —— 选球必须遵守球组规则，否则会“球球犯规”/“老打玩家的球” ——
+  // bot 的球组 = State.oppGroup（'solid'|'stripe'|null）
+  const botGroup = State.oppGroup;
+  let candidates;
+  if (!botGroup){
+    // 还没分花色（开球阶段）：除黑8外都可打
+    candidates = allLive.filter(b => b.num !== 8);
+  } else if (groupCleared(botGroup)){
+    // 自己球组已清完：只能打黑8
+    candidates = allLive.filter(b => b.num === 8);
+  } else {
+    // 正常阶段：只打自己球组的球，绝不碰黑8、也不碰玩家的球
+    candidates = allLive.filter(b => b.type === botGroup && b.num !== 8);
+  }
+  // 兜底：若候选为空（异常情况），退回除黑8外的所有球，避免卡死
+  if (candidates.length === 0) candidates = allLive.filter(b => b.num !== 8);
+  if (candidates.length === 0) candidates = allLive;
+
+  // 在候选里挑：优先距离白球近的（更容易打中、减少误碰他球的犯规）
+  const cueX = State.cue.body.position.x, cueY = State.cue.body.position.y;
   let best=null, bestD=Infinity;
-  targets.forEach(b=>{
-    const d = Math.hypot(b.body.position.x-200, b.body.position.y-400);
+  candidates.forEach(b=>{
+    const d = Math.hypot(b.body.position.x-cueX, b.body.position.y-cueY);
     if (d<bestD){ bestD=d; best=b; }
   });
 
