@@ -2058,7 +2058,7 @@ function endMatch(result, reason){
    19. INIT
    ================================================================ */
 function init(){
-  console.log('[game_final.js] v=20240629a loaded');
+  console.log('[game_final.js] v=20240629b loaded');
   State.startTs = Date.now();
   canvas = $('#table-canvas');
   if (canvas){
@@ -2099,15 +2099,6 @@ function init(){
       initEngine(); setupRack(); updateTurnUI(); showGroupBanner();
       Character.resetRepeat();  // 新一局清空语音防重复记录
       State.phase = 'IDLE'; redrawAim();
-    });
-  }
-
-  // "取消" 按钮：只关闭弹窗，保留当前局面
-  const btnC = $('#btn-game-cancel');
-  if (btnC){
-    btnC.addEventListener('click', ()=>{
-      const mask = document.getElementById('game-over-mask');
-      if (mask) mask.classList.remove('active');
     });
   }
 
