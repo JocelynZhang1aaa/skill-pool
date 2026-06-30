@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>桌球对局 · skill-pool v4 (final)</title>
+<title>桌球对局 · 与席恩对弈</title>
 <link rel="stylesheet" href="./style_final.css?v=20240629c" />
 </head>
 <body>
@@ -56,7 +56,7 @@
     </div>
   </div>
 
-  <!-- 小麦圆形头像框 + 气泡（右上角浮层） -->
+  <!-- 席恩圆形头像框 + 气泡（右上角浮层） -->
   <div class="char-stage" id="char-stage">
     <div class="char-bubble" id="char-bubble"></div>
     <div class="char-frame mood-happy" id="char-frame"></div>
@@ -139,16 +139,16 @@
     <div class="game-over-card" id="game-over-card">
       <!-- 顶部横幅奖牌 -->
       <div class="go-banner" id="go-banner"><span id="go-banner-text">胜利</span></div>
-      <!-- 拍立得照片：图钉 + 小麦立绘 -->
+      <!-- 拍立得照片：图钉 + 席恩立绘（结果时由 JS 切到对应表情） -->
       <div class="go-photo" id="go-photo">
         <span class="go-pin"></span>
         <div class="go-photo-inner">
-          <img class="go-avatar" id="go-avatar" src="./assets/xiaomai-pout.png" alt="小麦" />
+          <img class="go-avatar" id="go-avatar" src="./assets/xien-av-hat.png" alt="席恩" />
         </div>
       </div>
       <!-- 主标题（是胜利啊！/ 不小心失败啦..） -->
       <div class="go-title" id="game-over-title"></div>
-      <!-- 小麦点评 -->
+      <!-- 席恩点评 -->
       <div class="go-comment" id="game-over-reason"></div>
       <!-- 按钮 -->
       <button class="btn-game-restart" id="btn-game-restart">再 来 一 次</button>
@@ -158,6 +158,8 @@
 </div><!-- /.stage -->
 </div><!-- /.stage-frame -->
 
+<!-- 选择对手为席恩：必须在 game_final.js 之前 -->
+<script>window.__BOT_ID__ = 'xien';</script>
 <script src="./matter.min.js"></script>
 <script src="./game_final.js?v=20240630i"></script>
 </body>

@@ -53,12 +53,48 @@ const BOT_PROFILES = {
       cute:  './assets/xiaomai-cute.png',   // 卖萌/撒娇
       smug:  './assets/xiaomai-smug.png',   // 得瑟（嘲讽/赢）
       pout:  './assets/xiaomai-pout.png'    // 委屈嘟嘴（输/自己犯规）
+    },
+    // 头像圆框内每张立绘的脸部对准参数（pos=脸中心位置, size=放大倍数）
+    faces: {
+      happy: { pos:'47% 36%', size:'175%' },
+      cute:  { pos:'39% 33%', size:'185%' },
+      smug:  { pos:'48% 30%', size:'195%' },
+      pout:  { pos:'49% 32%', size:'195%' }
     }
   },
   xien: {
     id:'xien', name:'席恩', emoji:'🌙',
-    skill: { angle_precision:0.82, safety:0.70, power_min:0.25, power_max:0.70 },
-    win_rate: 0.68
+    // 执事·史诗级强度：启用"真·瞄袋"AI(aimMode:'pot')，会计算鬼球点把目标球打进袋，
+    // 而非像普通 bot 那样直推球心碰运气。精度极高、近乎不失误。
+    aimMode: 'pot',
+    potSkill: {
+      aimError:   0.007,  // 瞄准角误差(弧度,越小越准) ≈ ±0.4°，近乎神准
+      cutLimit:   1.50,   // 可接受的最大切角(~86°)，敢打极薄球
+      missChance: 0.03,   // 仅 3% 概率手抖(保留一丝可赢性)
+      powerBase:  0.70,   // 基础力度(调高：保证远球也能推到袋)
+      powerSpan:  0.28    // 按目标球到袋距离叠加的力度跨度
+    },
+    // 旧字段保留作兜底(无可进球时的安全杆仍走这套)
+    skill: { angle_precision:0.80, safety:0.45, power_min:0.45, power_max:0.85 },
+    win_rate: 0.62,
+    // 头像只用两张：探头(peek)整颗头特写 + 茶农斗笠(hat)。
+    // 二者已预裁成「正方形+脸居中」(xien-av-*.png)，CSS 用 cover 居中即可，脸完整露出。
+    avatars: {
+      idle:  './assets/xien-av-peek.png',  // 默认 / 待机（探头脸特写）
+      happy: './assets/xien-av-peek.png',  // 满意（进球/夸赞）
+      cute:  './assets/xien-av-hat.png',   // 卖萌（斗笠端茶·自嘲）
+      smug:  './assets/xien-av-hat.png',   // 得意（嘲讽/赢）
+      pout:  './assets/xien-av-peek.png'   // 委屈（输/自己犯规）
+    },
+    // 已预裁居中 → 统一 cover 居中
+    faces: {
+      happy: { pos:'50% 50%', size:'cover' },
+      cute:  { pos:'50% 50%', size:'cover' },
+      smug:  { pos:'50% 50%', size:'cover' },
+      pout:  { pos:'50% 50%', size:'cover' }
+    },
+    // 结果页拍立得用的图（赢=斗笠得意, 输=探头委屈）
+    resultAvatars: { win:'./assets/xien-av-peek.png', lose:'./assets/xien-av-hat.png' }
   },
   daike: {
     id:'daike', name:'代柯', emoji:'🔥',
@@ -185,6 +221,70 @@ const VOICE_LINES = {
       '哎呀手抖了一下……就一下下而已！',
       '犯规归犯规但你不能因此质疑我的实力啊喂！',
     ],
+  },
+
+  // ================= 席恩（执事·温柔为主，毒舌作点缀）=================
+  // 谁出杆+什么结果 与小麦严格对齐。温柔宠溺打底，偶尔一句俏皮吐槽；
+  // 句式刻意长短错落，避免「一句。一句（笑）」的同质化节奏。
+  xien: {
+    // ===== taunt：玩家打丢没进（执事腹黑，恭敬里带点小毒舌）×6（与语音对齐）=====
+    taunt: [
+      '这球分明是故意躲着您跑。',
+      '不愧是您，连白球都没料到您会这么打。',
+      '差得有点远呢，要我帮您把球挪近些吗？',
+      '您今天离进球只差一点运气——而运气，迟早会偏向您的。',
+      '这一杆很有勇气。',
+      '这一球，我没想到能这样打诶。',
+    ],
+    // ===== cute：席恩自己打丢没进（自己失手，温柔自嘲）×5（与语音对齐）=====
+    cute: [
+      '我觉得……是这张桌子对我有些许偏见。',
+      '咳，就当我在自娱自乐吧。',
+      '罕见地手滑了，您就当没看见好不好。',
+      '走神了，刚才在想该给您备什么宵夜。',
+      '失误归失误，下一杆我会认真的。',
+    ],
+    // ===== praise：玩家进球/好杆（真心夸，温柔欣赏）×4 =====
+    praise: [
+      '看您出杆的样子，今天能在您身边真好。',
+      '这力道恰到好处，您是不是偷偷练过？',
+      '今日你的状态极佳。',
+      '你这手法我要记进执事观察日记。',
+    ],
+    // ===== brag：席恩自己进球（温柔地小得意，讨夸）×3（与语音对齐）=====
+    brag: [
+      '进了，让您看看您的执事也有可取之处。',
+      '看，这种球我还是拿得稳的。',
+      '好戏才刚开始，别移开视线哦。',
+    ],
+    // ===== on_win：终局席恩赢（温柔地哄，不让对方难堪）×2 =====
+    on_win: [
+      '承蒙关照，是我险胜了。',
+      '我赢了，今晚的睡前故事就由我为您挑。',
+    ],
+    // ===== on_lose：终局席恩输（温柔认输，藏一点不甘）×2（与语音对齐）=====
+    on_lose: [
+      '这局是您赢了，我心服口服。',
+      '虽然输了，但还想再来一局。',
+    ],
+    // ===== pfoul_empty：玩家空杆（温柔打趣，不刻薄）×2（与语音对齐）=====
+    pfoul_empty: [
+      '白球……它大概舍不得离开您。',
+      '空杆而已，没事的～',
+    ],
+    // ===== pfoul_other：玩家其它犯规（温柔提醒，带点宠溺打趣）×3（与语音对齐）=====
+    pfoul_other: [
+      '唔……犯规了。',
+      '碰错球了……',
+      '……有些莽撞了。',
+    ],
+    // ===== on_bot_foul：席恩自己犯规（温柔自嘲，向雇主撒娇找台阶）×4（与语音对齐）=====
+    on_bot_foul: [
+      '我也犯规了呢。',
+      '一时分了神，在想该给您备什么茶。',
+      '是我莽撞了。',
+      '这杆怪我，下回我会认真些。',
+    ],
   }
 };
 
@@ -236,6 +336,69 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xiaomai/bfoul_02_shoudou.mp3', text:'哎呀手抖了一下…' },
     ],
     // on_win / pfoul_cue 本批无语音 → say() 自动回退到文字气泡
+  },
+
+  // ================= 席恩语音（2026-06-30 接入 31 条 mp3）=================
+  // 字幕 text 与音频实际念白保持一致（部分音频是台词的另一种说法）
+  xien: {
+    // taunt 玩家打丢（6条）
+    taunt: [
+      { audio:'./assets/voice/xien/taunt_01.mp3', text:'这球分明是故意躲着您跑。' },
+      { audio:'./assets/voice/xien/taunt_02.mp3', text:'不愧是您，连白球都没料到您会这么打。' },
+      { audio:'./assets/voice/xien/taunt_03.mp3', text:'差得有点远呢，要我帮您把球挪近些吗？' },
+      { audio:'./assets/voice/xien/taunt_04.mp3', text:'您今天离进球只差一点运气——而运气，迟早会偏向您的。' },
+      { audio:'./assets/voice/xien/taunt_05.mp3', text:'这一杆很有勇气。' },
+      { audio:'./assets/voice/xien/taunt_06.mp3', text:'这一球，我没想到能这样打诶。' },
+    ],
+    // cute 席恩自己打丢（5条）
+    cute: [
+      { audio:'./assets/voice/xien/cute_01.mp3', text:'我觉得……是这张桌子对我有些许偏见。' },
+      { audio:'./assets/voice/xien/cute_02.mp3', text:'咳，就当我在自娱自乐吧。' },
+      { audio:'./assets/voice/xien/cute_03.mp3', text:'罕见地手滑了，您就当没看见好不好。' },
+      { audio:'./assets/voice/xien/cute_04.mp3', text:'走神了，刚才在想该给您备什么宵夜。' },
+      { audio:'./assets/voice/xien/cute_05.mp3', text:'失误归失误，下一杆我会认真的。' },
+    ],
+    // praise 玩家进球（4条）
+    praise: [
+      { audio:'./assets/voice/xien/praise_01.mp3', text:'看您出杆的样子，今天能在您身边真好。' },
+      { audio:'./assets/voice/xien/praise_02.mp3', text:'这力道恰到好处，您是不是偷偷练过？' },
+      { audio:'./assets/voice/xien/praise_03.mp3', text:'今日你的状态极佳。' },
+      { audio:'./assets/voice/xien/praise_04.mp3', text:'你这手法我要记进执事观察日记。' },
+    ],
+    // brag 席恩自己进球（3条）
+    brag: [
+      { audio:'./assets/voice/xien/brag_01.mp3', text:'进了，让您看看您的执事也有可取之处。' },
+      { audio:'./assets/voice/xien/brag_02.mp3', text:'看，这种球我还是拿得稳的。' },
+      { audio:'./assets/voice/xien/brag_03.mp3', text:'好戏才刚开始，别移开视线哦。' },
+    ],
+    // on_win 席恩终局赢（2条）
+    on_win: [
+      { audio:'./assets/voice/xien/on_win_01.mp3', text:'承蒙关照，是我险胜了。' },
+      { audio:'./assets/voice/xien/on_win_02.mp3', text:'我赢了，今晚的睡前故事就由我为您挑。' },
+    ],
+    // on_lose 席恩终局输（2条）
+    on_lose: [
+      { audio:'./assets/voice/xien/on_lose_01.mp3', text:'这局是您赢了，我心服口服。' },
+      { audio:'./assets/voice/xien/on_lose_02.mp3', text:'虽然输了，但还想再来一局。' },
+    ],
+    // pfoul_empty 玩家空杆（2条）
+    pfoul_empty: [
+      { audio:'./assets/voice/xien/pfoul_empty_01.mp3', text:'白球……它大概舍不得离开您。' },
+      { audio:'./assets/voice/xien/pfoul_empty_02.mp3', text:'空杆而已，没事的～' },
+    ],
+    // pfoul_other 玩家其它犯规（3条）
+    pfoul_other: [
+      { audio:'./assets/voice/xien/pfoul_other_01.mp3', text:'唔……犯规了。' },
+      { audio:'./assets/voice/xien/pfoul_other_02.mp3', text:'碰错球了……' },
+      { audio:'./assets/voice/xien/pfoul_other_03.mp3', text:'……有些莽撞了。' },
+    ],
+    // on_bot_foul 席恩自己犯规（4条）
+    on_bot_foul: [
+      { audio:'./assets/voice/xien/on_bot_foul_01.mp3', text:'我也犯规了呢。' },
+      { audio:'./assets/voice/xien/on_bot_foul_02.mp3', text:'一时分了神，在想该给您备什么茶。' },
+      { audio:'./assets/voice/xien/on_bot_foul_03.mp3', text:'是我莽撞了。' },
+      { audio:'./assets/voice/xien/on_bot_foul_04.mp3', text:'这杆怪我，下回我会认真些。' },
+    ],
   }
 };
 
@@ -300,7 +463,8 @@ const BALL_COLORS = {
 const State = {
   matchId:   null,
   startTs:   null,
-  botProfile: BOT_PROFILES.xiaomai,
+  // 对手由页面变量 window.__BOT_ID__ 决定（xien_index.html 设为 'xien'），缺省小麦
+  botProfile: BOT_PROFILES[(typeof window!=='undefined' && window.__BOT_ID__) || 'xiaomai'] || BOT_PROFILES.xiaomai,
   balls:     [],
   cue:       null,
   turn:      'me',
@@ -442,6 +606,8 @@ const Character = (() => {
   // 切换立绘表情；duration 后回到 idle
   // mood: idle/happy/cute/smug/pout → 切 .char-frame 的 mood-* class
   const MOOD_CLASS = { idle:'mood-happy', happy:'mood-happy', cute:'mood-cute', smug:'mood-smug', pout:'mood-pout' };
+  // 把抽象 mood 归一到立绘 key（idle 复用 happy 的图）
+  const MOOD_AVATAR_KEY = { idle:'happy', happy:'happy', cute:'cute', smug:'smug', pout:'pout' };
   function setMood(mood, holdMs = 3500){
     const frame = document.getElementById('char-frame');
     if (!frame) return;
@@ -449,6 +615,17 @@ const Character = (() => {
     if (!frame.classList.contains(cls)){
       frame.classList.remove('mood-happy','mood-cute','mood-smug','mood-pout');
       frame.classList.add(cls);
+    }
+    // 数据驱动立绘：从当前 bot 的 avatars/faces 取图与脸部参数，写到 inline style
+    // （这样换角色只改 BOT_PROFILES，无需改 CSS）
+    const prof = State.botProfile;
+    if (prof && prof.avatars){
+      const key = MOOD_AVATAR_KEY[mood] || 'happy';
+      const img = prof.avatars[key] || prof.avatars.idle;
+      const face = (prof.faces && prof.faces[key]) || {};
+      if (img) frame.style.backgroundImage = `url('${img}')`;
+      frame.style.backgroundPosition = face.pos || '50% 35%';
+      frame.style.backgroundSize = face.size || '180%';
     }
     clearTimeout(_moodTimer);
     if (holdMs > 0){
@@ -499,7 +676,9 @@ const Character = (() => {
    */
   function say(category, mood = 'idle', opts = {}){
     const id = State.botProfile && State.botProfile.id;
-    if (id !== 'xiaomai') return;  // 目前只有小麦有素材
+    if (!id) return;
+    // 任意有立绘素材的 bot 都可触发（小麦/席恩…）；无素材的 bot 静默
+    if (!(State.botProfile.avatars)) return;
 
     const { voiceChance = 1, bubble = true, force = false } = opts;
 
@@ -1776,6 +1955,105 @@ function nextTurn(){
 /* ================================================================
    17. BOT AI
    ================================================================ */
+
+/**
+ * 真·瞄袋规划：在候选球 × 6 个袋口里，挑一个「最容易打进」的方案。
+ * 返回 { cueAngle, powerNeed(0~1), score } 或 null（无可行进球）。
+ *
+ * 原理（标准台球几何）：
+ *   要把目标球 O 打进袋 P，母球需击中 O 的「鬼球点」G —— 即沿 O→P 反方向、
+ *   距 O 球心一个球直径(2R)处的点。母球从当前位置 C 瞄准 G 即可。
+ *   切角 = 向量(C→G) 与 (G→O) 的夹角；切角越小越好打、越大越薄越易失。
+ */
+function planPotShot(profile, candidates, cueX, cueY){
+  const R = TABLE.ballR;
+  const D = R * 2;                 // 鬼球点到目标球心的距离
+  const ps = profile.potSkill || {};
+  const cutLimit = ps.cutLimit != null ? ps.cutLimit : 1.40;
+
+  let best = null;
+
+  for (const ball of candidates){
+    const ox = ball.body.position.x, oy = ball.body.position.y;
+
+    for (const pk of POCKETS){
+      // O→P 方向（目标球该往哪走）
+      const opx = pk.x - ox, opy = pk.y - oy;
+      const opLen = Math.hypot(opx, opy);
+      if (opLen < 1) continue;
+      const ux = opx / opLen, uy = opy / opLen;
+
+      // 鬼球点 G = O 沿 (P→O) 方向退 2R
+      const gx = ox - ux * D, gy = oy - uy * D;
+
+      // 母球 C→G 方向
+      const cgx = gx - cueX, cgy = gy - cueY;
+      const cgLen = Math.hypot(cgx, cgy);
+      if (cgLen < 1) continue;
+      const vx = cgx / cgLen, vy = cgy / cgLen;
+
+      // 切角：C→G 与 O→P 的夹角（母球进球线 vs 目标球出射线）
+      const dot = clamp(vx * ux + vy * uy, -1, 1);
+      const cut = Math.acos(dot);
+      if (cut > cutLimit) continue;        // 太薄，放弃
+
+      // 母球必须从 G 的「后方」击打（不能背对袋口推），cut<90° 已基本保证
+      // 但要排除：母球在目标球与袋口的「另一侧」（会把球往反方向打）
+      if (dot <= 0) continue;
+
+      // —— 路径遮挡检测 —— 
+      // 1) 母球→鬼球点 这条线上不能有别的球挡着
+      if (pathBlocked(cueX, cueY, gx, gy, ball, R)) continue;
+      // 2) 目标球→袋口 这条线上不能有别的球挡着
+      if (pathBlocked(ox, oy, pk.x, pk.y, ball, R)) continue;
+
+      // —— 打分：切角越小越好、目标球离袋越近越好、母球离鬼球点越近越好 ——
+      const cutScore   = 1 - cut / cutLimit;            // 0~1
+      const distScore  = 1 - clamp(opLen / 700, 0, 1);  // 目标球到袋越近越高
+      const reachScore = 1 - clamp(cgLen / 800, 0, 1);  // 母球到鬼球点越近越高
+      const pocketBonus = pk.kind === 'corner' ? 0.08 : 0;  // 角袋略好打
+      const score = cutScore * 0.55 + distScore * 0.30 + reachScore * 0.15 + pocketBonus;
+
+      if (!best || score > best.score){
+        best = {
+          score,
+          cueAngle: Math.atan2(cgy, cgx),
+          // 力度需求：母球到鬼球 + 目标球到袋，路程越长越用力
+          powerNeed: clamp((cgLen + opLen) / 1100, 0.2, 1),
+          cut
+        };
+      }
+    }
+  }
+
+  return best;
+}
+
+/**
+ * 线段 (ax,ay)->(bx,by) 上是否有除 exclude 外的活球挡道。
+ * clearance = 球半径 + 一点余量，模拟"球过得去"的最小通道。
+ */
+function pathBlocked(ax, ay, bx, by, exclude, R){
+  const clearance = R * 1.9;       // 两球半径和略放宽
+  const dx = bx - ax, dy = by - ay;
+  const segLen2 = dx*dx + dy*dy;
+  if (segLen2 < 1) return false;
+
+  for (const b of State.balls){
+    if (b.pocketed || !b.body) continue;
+    if (b === exclude) continue;
+    if (b.id === 'cue') continue;   // 母球自身不算障碍
+    const px = b.body.position.x, py = b.body.position.y;
+    // 点到线段投影参数 t
+    let t = ((px-ax)*dx + (py-ay)*dy) / segLen2;
+    t = clamp(t, 0, 1);
+    const cx = ax + t*dx, cy = ay + t*dy;
+    const dist = Math.hypot(px-cx, py-cy);
+    if (dist < clearance) return true;
+  }
+  return false;
+}
+
 function botPlay(){
   if (State.ended) return;
   if (State.turn!=='bot') return;
@@ -1823,10 +2101,31 @@ function botPlay(){
   if (!best) return;
 
   const cpx=State.cue.body.position.x, cpy=State.cue.body.position.y;
-  const tpx=best.body.position.x, tpy=best.body.position.y;
-  const precision = profile.skill.angle_precision * (0.6 + profile.win_rate*0.6);
-  const angle = Math.atan2(tpy-cpy, tpx-cpx) + (Math.random()-0.5)*(1-precision)*0.15;
-  const power = profile.skill.power_min + Math.random()*(profile.skill.power_max-profile.skill.power_min);
+
+  let angle, power;
+
+  // ===== 强化 AI：真·瞄袋（aimMode:'pot'）=====
+  const plan = (profile.aimMode === 'pot')
+    ? planPotShot(profile, candidates, cpx, cpy)
+    : null;
+
+  if (plan){
+    // 命中规划：瞄向鬼球点，力度按目标球到袋的距离决定
+    const ps = profile.potSkill;
+    angle = plan.cueAngle + (Math.random()-0.5)*2*ps.aimError;   // 极小误差
+    power = clamp(ps.powerBase + plan.powerNeed*ps.powerSpan, 0.45, 1);
+    // 极低概率手抖：放大误差 + 略减力，保留一点可赢性
+    if (Math.random() < ps.missChance){
+      angle += (Math.random()-0.5)*0.10;
+      power *= 0.85;
+    }
+  } else {
+    // 兜底安全杆：没有可进球时，沿用普通"直推最近己方球"逻辑
+    const tpx=best.body.position.x, tpy=best.body.position.y;
+    const precision = profile.skill.angle_precision * (0.6 + profile.win_rate*0.6);
+    angle = Math.atan2(tpy-cpy, tpx-cpx) + (Math.random()-0.5)*(1-precision)*0.15;
+    power = profile.skill.power_min + Math.random()*(profile.skill.power_max-profile.skill.power_min);
+  }
 
   State.aimAngle = angle;
   State.aimPower = power;
@@ -2052,26 +2351,48 @@ function reportMatch(kind){
 }
 // 暴露便于调试 / 外部触发回传
 try { window.__poolReport = { buildSummaryText, reportMatch, Reporter }; window.__poolState = State; } catch(e){}
+// 调试钩子：便于自动化测试 / 排查 AI（不影响正常游戏）
+try { window.__poolAI = { botPlay, planPotShot, respawnCueBall, BOT_PROFILES }; } catch(e){}
 
-// 结果页点评文案（多条随机抽）
-const GAMEOVER_COMMENTS = {
-  // 用户赢（小麦输）—— 小麦不服 / 嘴硬
-  win: [
-    '算你厉害！！这局让你了哼',
-    '可恶…下次绝对不会让你赢了！',
-    '哼，运气好罢了，再来一局啊！',
-    '不许得意！我只是手感没来而已',
-    '好吧好吧你赢了，但本小姐很快就会反超的',
-  ],
-  // 用户输（小麦赢）—— 小麦得瑟 / 挑衅
-  lose: [
-    '就你还要单挑？回去多练练吧 honey',
-    '嘻嘻~ 这就是实力的差距哦',
-    '太弱啦太弱啦，给我表演杂技呢？',
-    '下次记得先充钱…啊不是，先练习',
-    '本小姐果然天下无敌！快说小麦最厉害~',
-  ],
+// 结果页点评文案（按 bot 分，多条随机抽）
+const GAMEOVER_COMMENTS_BY_BOT = {
+  xiaomai: {
+    // 用户赢（小麦输）—— 小麦不服 / 嘴硬
+    win: [
+      '算你厉害！！这局让你了哼',
+      '可恶…下次绝对不会让你赢了！',
+      '哼，运气好罢了，再来一局啊！',
+      '不许得意！我只是手感没来而已',
+      '好吧好吧你赢了，但本小姐很快就会反超的',
+    ],
+    // 用户输（小麦赢）—— 小麦得瑟 / 挑衅
+    lose: [
+      '就你还要单挑？回去多练练吧 honey',
+      '嘻嘻~ 这就是实力的差距哦',
+      '太弱啦太弱啦，给我表演杂技呢？',
+      '下次记得先充钱…啊不是，先练习',
+      '本小姐果然天下无敌！快说小麦最厉害~',
+    ],
+  },
+  // 席恩·执事（温柔为主，毒舌作点缀）
+  xien: {
+    // 用户赢（席恩落败=on_lose）—— 与语音对齐
+    win: [
+      '这局是您赢了，我心服口服。',
+      '虽然输了，但还想再来一局。',
+    ],
+    // 用户输（席恩获胜=on_win）—— 与语音对齐
+    lose: [
+      '承蒙关照，是我险胜了。',
+      '我赢了，今晚的睡前故事就由我为您挑。',
+    ],
+  },
 };
+// 兼容旧引用：取当前 bot 的点评，回退小麦
+function getGameOverComments(){
+  const id = (State.botProfile && State.botProfile.id) || 'xiaomai';
+  return GAMEOVER_COMMENTS_BY_BOT[id] || GAMEOVER_COMMENTS_BY_BOT.xiaomai;
+}
 
 function endMatch(result, reason){
   State.ended = true;
@@ -2097,12 +2418,21 @@ function endMatch(result, reason){
     card.classList.add(win ? 'win' : 'lose');
   }
   if (banner) banner.textContent = win ? '胜 利' : '失 败';
-  // 用户赢 → 小麦委屈(pout)；用户输 → 小麦得意(smug)
-  if (avatar) avatar.src = win ? './assets/xiaomai-pout.png' : './assets/xiaomai-smug.png';
+  // 用户赢 → bot委屈(pout)；用户输 → bot得意(smug)。图片来自当前 bot 的立绘
+  if (avatar){
+    const prof = State.botProfile || {};
+    const av = prof.avatars || {};
+    // 优先用 resultAvatars(结果页专用图)，否则回退情绪立绘
+    const ra = prof.resultAvatars;
+    avatar.src = ra ? (win ? ra.win : ra.lose)
+                    : (win ? (av.pout || './assets/xiaomai-pout.png')
+                           : (av.smug || './assets/xiaomai-smug.png'));
+    avatar.alt = prof.name || '对手';
+  }
   if (title)  title.textContent = win ? '是胜利啊！' : '不小心失败啦..';
   // 随机抽一条点评
   if (rEl){
-    const pool = GAMEOVER_COMMENTS[result] || [];
+    const pool = getGameOverComments()[result] || [];
     rEl.textContent = pool.length ? pool[(Math.random()*pool.length)|0] : (reason || '');
   }
   if (mask) mask.classList.add('active');
@@ -2176,11 +2506,12 @@ function init(){
 const Guide = (() => {
   const SEEN_KEY = 'pool_guide_seen_v1';
   // 4 步：目标元素选择器 + 文案 + 气泡相对位置(below/above/auto)
+  const _bn = () => (State.botProfile && State.botProfile.name) || '对手';
   const STEPS = [
     { sel:'#cue-rail',   text:'拖动左侧这根球杆来蓄力 —— 往下拖得越多，击球力度越大，松手即出杆。', pos:'right' },
     { sel:'#table',      text:'在球桌上拖动可以调整瞄准方向，白色虚线就是母球的去向。', pos:'auto' },
-    { sel:'.hud',        text:'顶部显示你和小麦各自要打的球，把自己花色的球全部打进、最后打进黑8 就赢啦。', pos:'below' },
-    { sel:'#char-stage', text:'小麦会全程陪你玩、随口点评，赢了她试试看 😏', pos:'below' },
+    { sel:'.hud',        text:`顶部显示你和${_bn()}各自要打的球，把自己花色的球全部打进、最后打进黑8 就赢啦。`, pos:'below' },
+    { sel:'#char-stage', text:`${_bn()}会全程陪你玩、随口点评，赢了TA试试看 😏`, pos:'below' },
   ];
   let idx = 0;
   let mask, hole, tip, stepEl, textEl, nextBtn;
