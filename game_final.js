@@ -229,7 +229,6 @@ const VOICE_LINES = {
     taunt: [
       '差得有点远呢，要我帮您把球挪近些吗？',
       '这一杆很有勇气。',
-      '这一球，我没想到能这样打诶。',
       '看起来力度不够呢。',
       '哎呀，您这是在故意示弱吗？',
     ],
@@ -244,7 +243,7 @@ const VOICE_LINES = {
     praise: [
       '这球打得漂亮，看来是要乘胜追击了？',
       '这力道恰到好处，您是不是偷偷练过？',
-      '不愧是您，边库球都能精准命中。',
+      '这一球，我没想到能这样打诶。',
       '这可真是意外之喜呢。',
     ],
     // 玩家连续进球（≥2颗）
@@ -254,11 +253,6 @@ const VOICE_LINES = {
     ],
     brag: [
       '看，这种球我还是拿得稳的。',
-      '那我就，瞄准那颗。',
-    ],
-    // 席恩连续进球（≥2颗）
-    brag_streak: [
-      '因为我刚才那一杆失误，所以要一口气解决掉所有球是吧。',
     ],
     on_win: [
       '我赢了，今晚的睡前故事就由我为您挑。',
@@ -343,11 +337,10 @@ const VOICE_CLIPS = {
   // ================= 席恩语音（2026-07-01 换新批 34 条 mp3，按行为触发）=================
   // 触发规则见 resolveShot()：谁出杆 + 什么结果 → 对应分类随机取一条
   xien: {
-    // taunt 玩家打丢没进（5条）
+    // taunt 玩家打丢没进（4条）
     taunt: [
       { audio:'./assets/voice/xien/taunt_01.mp3', text:'差得有点远呢，要我帮您把球挪近些吗？' },
       { audio:'./assets/voice/xien/taunt_02.mp3', text:'这一杆很有勇气。' },
-      { audio:'./assets/voice/xien/taunt_03.mp3', text:'这一球，我没想到能这样打诶。' },
       { audio:'./assets/voice/xien/taunt_04.mp3', text:'看起来力度不够呢。' },
       { audio:'./assets/voice/xien/taunt_05.mp3', text:'哎呀，您这是在故意示弱吗？' },
     ],
@@ -360,11 +353,11 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xien/cute_05.mp3', text:'呃……看来我的球技还不够稳定。' },
       { audio:'./assets/voice/xien/cute_06.mp3', text:'看来我还需要多加练习呢。' },
     ],
-    // praise 玩家进球（4条）
+    // praise 玩家进球/打出好杆（4条，含从 taunt 移来的惊讶夸赞）
     praise: [
       { audio:'./assets/voice/xien/praise_01.mp3', text:'这球打得漂亮，看来是要乘胜追击了？' },
       { audio:'./assets/voice/xien/praise_02.mp3', text:'这力道恰到好处，您是不是偷偷练过？' },
-      { audio:'./assets/voice/xien/praise_03.mp3', text:'不愧是您，边库球都能精准命中。' },
+      { audio:'./assets/voice/xien/praise_03.mp3', text:'这一球，我没想到能这样打诶。' },
       { audio:'./assets/voice/xien/praise_04.mp3', text:'这可真是意外之喜呢。' },
     ],
     // praise_streak 玩家连续进球（≥2颗，乘胜/局势倾斜）（2条）
@@ -372,14 +365,9 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xien/praise_streak_01.mp3', text:'看来胜负的天平，要向您倾斜了呢。' },
       { audio:'./assets/voice/xien/praise_streak_02.mp3', text:'看来这场比赛的胜利，注定属于您了。' },
     ],
-    // brag 席恩自己进球（2条）
+    // brag 席恩自己进球（1条）
     brag: [
       { audio:'./assets/voice/xien/brag_01.mp3', text:'看，这种球我还是拿得稳的。' },
-      { audio:'./assets/voice/xien/brag_02.mp3', text:'那我就，瞄准那颗。' },
-    ],
-    // brag_streak 席恩连续进球（≥2颗，一口气清球）（1条）
-    brag_streak: [
-      { audio:'./assets/voice/xien/brag_streak_01.mp3', text:'因为我刚才那一杆失误，所以要一口气解决掉所有球是吧。' },
     ],
     // on_win 席恩终局赢（2条）
     on_win: [
@@ -1941,9 +1929,8 @@ function resolveShot(){
       if (streak >= 2) Character.say('praise_streak', 'pout', { voiceChance:0.7 });
       else             Character.say('praise', 'happy', { voiceChance:0.6 });
     } else {
-      // 席恩进球 → 得意(brag)；席恩连续进球 → 一口气清台(brag_streak)
-      if (streak >= 2) Character.say('brag_streak', 'smug', { voiceChance:0.7 });
-      else             Character.say('brag', 'smug', { voiceChance:0.6 });
+      // 席恩进球 → 得意(brag)（brag_streak 音频已删，连击也用 brag）
+      Character.say('brag', 'smug', { voiceChance:0.6 });
     }
     continueTurn(me ? 'me' : 'bot');
   } else {
