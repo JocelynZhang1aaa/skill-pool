@@ -223,67 +223,69 @@ const VOICE_LINES = {
     ],
   },
 
-  // ================= 席恩（执事·温柔为主，毒舌作点缀）=================
-  // 谁出杆+什么结果 与小麦严格对齐。温柔宠溺打底，偶尔一句俏皮吐槽；
-  // 句式刻意长短错落，避免「一句。一句（笑）」的同质化节奏。
+  // ================= 席恩（文字兜底，与 VOICE_CLIPS.xien 一一对齐）=================
+  // 语音被冷却挡下时的字幕气泡；措辞与真人念白保持一致，避免串味。
   xien: {
-    // ===== taunt：玩家打丢没进（执事腹黑，恭敬里带点小毒舌）×6（与语音对齐）=====
     taunt: [
-      '这球分明是故意躲着您跑。',
-      '不愧是您，连白球都没料到您会这么打。',
       '差得有点远呢，要我帮您把球挪近些吗？',
-      '您今天离进球只差一点运气——而运气，迟早会偏向您的。',
       '这一杆很有勇气。',
       '这一球，我没想到能这样打诶。',
+      '看起来力度不够呢。',
+      '哎呀，您这是在故意示弱吗？',
     ],
-    // ===== cute：席恩自己打丢没进（自己失手，温柔自嘲）×5（与语音对齐）=====
     cute: [
       '我觉得……是这张桌子对我有些许偏见。',
       '咳，就当我在自娱自乐吧。',
       '罕见地手滑了，您就当没看见好不好。',
-      '走神了，刚才在想该给您备什么宵夜。',
       '失误归失误，下一杆我会认真的。',
+      '呃……看来我的球技还不够稳定。',
+      '看来我还需要多加练习呢。',
     ],
-    // ===== praise：玩家进球/好杆（真心夸，温柔欣赏）×4 =====
     praise: [
-      '看您出杆的样子，今天能在您身边真好。',
+      '这球打得漂亮，看来是要乘胜追击了？',
       '这力道恰到好处，您是不是偷偷练过？',
-      '今日你的状态极佳。',
-      '你这手法我要记进执事观察日记。',
+      '不愧是您，边库球都能精准命中。',
+      '这可真是意外之喜呢。',
     ],
-    // ===== brag：席恩自己进球（温柔地小得意，讨夸）×3（与语音对齐）=====
+    // 玩家连续进球（≥2颗）
+    praise_streak: [
+      '看来胜负的天平，要向您倾斜了呢。',
+      '看来这场比赛的胜利，注定属于您了。',
+    ],
     brag: [
-      '进了，让您看看您的执事也有可取之处。',
       '看，这种球我还是拿得稳的。',
-      '好戏才刚开始，别移开视线哦。',
+      '那我就，瞄准那颗。',
     ],
-    // ===== on_win：终局席恩赢（温柔地哄，不让对方难堪）×2 =====
+    // 席恩连续进球（≥2颗）
+    brag_streak: [
+      '因为我刚才那一杆失误，所以要一口气解决掉所有球是吧。',
+    ],
     on_win: [
-      '承蒙关照，是我险胜了。',
       '我赢了，今晚的睡前故事就由我为您挑。',
+      '承蒙关照，是我险胜了。',
     ],
-    // ===== on_lose：终局席恩输（温柔认输，藏一点不甘）×2（与语音对齐）=====
     on_lose: [
       '这局是您赢了，我心服口服。',
       '虽然输了，但还想再来一局。',
     ],
-    // ===== pfoul_empty：玩家空杆（温柔打趣，不刻薄）×2（与语音对齐）=====
     pfoul_empty: [
       '白球……它大概舍不得离开您。',
       '空杆而已，没事的～',
     ],
-    // ===== pfoul_other：玩家其它犯规（温柔提醒，带点宠溺打趣）×3（与语音对齐）=====
     pfoul_other: [
       '唔……犯规了。',
       '碰错球了……',
-      '……有些莽撞了。',
+      '白球落袋，可是要给对手加分的机会呢。',
     ],
-    // ===== on_bot_foul：席恩自己犯规（温柔自嘲，向雇主撒娇找台阶）×4（与语音对齐）=====
     on_bot_foul: [
-      '我也犯规了呢。',
       '一时分了神，在想该给您备什么茶。',
-      '是我莽撞了。',
-      '这杆怪我，下回我会认真些。',
+    ],
+    // 空档寒暄（换手间隙暖场）
+    chat: [
+      '您平时经常打桌球吗？感觉您挺熟练的呢。',
+      '您只是想单纯地享受游戏的乐趣，对吧。',
+      '请尽情发挥，让我见识一下您的实力。',
+      '除了桌球，您还会想和我玩什么其他游戏吗？',
     ],
   }
 };
@@ -338,43 +340,51 @@ const VOICE_CLIPS = {
     // on_win / pfoul_cue 本批无语音 → say() 自动回退到文字气泡
   },
 
-  // ================= 席恩语音（2026-06-30 接入 31 条 mp3）=================
-  // 字幕 text 与音频实际念白保持一致（部分音频是台词的另一种说法）
+  // ================= 席恩语音（2026-07-01 换新批 34 条 mp3，按行为触发）=================
+  // 触发规则见 resolveShot()：谁出杆 + 什么结果 → 对应分类随机取一条
   xien: {
-    // taunt 玩家打丢（6条）
+    // taunt 玩家打丢没进（5条）
     taunt: [
-      { audio:'./assets/voice/xien/taunt_01.mp3', text:'这球分明是故意躲着您跑。' },
-      { audio:'./assets/voice/xien/taunt_02.mp3', text:'不愧是您，连白球都没料到您会这么打。' },
-      { audio:'./assets/voice/xien/taunt_03.mp3', text:'差得有点远呢，要我帮您把球挪近些吗？' },
-      { audio:'./assets/voice/xien/taunt_04.mp3', text:'您今天离进球只差一点运气——而运气，迟早会偏向您的。' },
-      { audio:'./assets/voice/xien/taunt_05.mp3', text:'这一杆很有勇气。' },
-      { audio:'./assets/voice/xien/taunt_06.mp3', text:'这一球，我没想到能这样打诶。' },
+      { audio:'./assets/voice/xien/taunt_01.mp3', text:'差得有点远呢，要我帮您把球挪近些吗？' },
+      { audio:'./assets/voice/xien/taunt_02.mp3', text:'这一杆很有勇气。' },
+      { audio:'./assets/voice/xien/taunt_03.mp3', text:'这一球，我没想到能这样打诶。' },
+      { audio:'./assets/voice/xien/taunt_04.mp3', text:'看起来力度不够呢。' },
+      { audio:'./assets/voice/xien/taunt_05.mp3', text:'哎呀，您这是在故意示弱吗？' },
     ],
-    // cute 席恩自己打丢（5条）
+    // cute 席恩自己打丢没进（6条）
     cute: [
       { audio:'./assets/voice/xien/cute_01.mp3', text:'我觉得……是这张桌子对我有些许偏见。' },
       { audio:'./assets/voice/xien/cute_02.mp3', text:'咳，就当我在自娱自乐吧。' },
       { audio:'./assets/voice/xien/cute_03.mp3', text:'罕见地手滑了，您就当没看见好不好。' },
-      { audio:'./assets/voice/xien/cute_04.mp3', text:'走神了，刚才在想该给您备什么宵夜。' },
-      { audio:'./assets/voice/xien/cute_05.mp3', text:'失误归失误，下一杆我会认真的。' },
+      { audio:'./assets/voice/xien/cute_04.mp3', text:'失误归失误，下一杆我会认真的。' },
+      { audio:'./assets/voice/xien/cute_05.mp3', text:'呃……看来我的球技还不够稳定。' },
+      { audio:'./assets/voice/xien/cute_06.mp3', text:'看来我还需要多加练习呢。' },
     ],
     // praise 玩家进球（4条）
     praise: [
-      { audio:'./assets/voice/xien/praise_01.mp3', text:'看您出杆的样子，今天能在您身边真好。' },
+      { audio:'./assets/voice/xien/praise_01.mp3', text:'这球打得漂亮，看来是要乘胜追击了？' },
       { audio:'./assets/voice/xien/praise_02.mp3', text:'这力道恰到好处，您是不是偷偷练过？' },
-      { audio:'./assets/voice/xien/praise_03.mp3', text:'今日你的状态极佳。' },
-      { audio:'./assets/voice/xien/praise_04.mp3', text:'你这手法我要记进执事观察日记。' },
+      { audio:'./assets/voice/xien/praise_03.mp3', text:'不愧是您，边库球都能精准命中。' },
+      { audio:'./assets/voice/xien/praise_04.mp3', text:'这可真是意外之喜呢。' },
     ],
-    // brag 席恩自己进球（3条）
+    // praise_streak 玩家连续进球（≥2颗，乘胜/局势倾斜）（2条）
+    praise_streak: [
+      { audio:'./assets/voice/xien/praise_streak_01.mp3', text:'看来胜负的天平，要向您倾斜了呢。' },
+      { audio:'./assets/voice/xien/praise_streak_02.mp3', text:'看来这场比赛的胜利，注定属于您了。' },
+    ],
+    // brag 席恩自己进球（2条）
     brag: [
-      { audio:'./assets/voice/xien/brag_01.mp3', text:'进了，让您看看您的执事也有可取之处。' },
-      { audio:'./assets/voice/xien/brag_02.mp3', text:'看，这种球我还是拿得稳的。' },
-      { audio:'./assets/voice/xien/brag_03.mp3', text:'好戏才刚开始，别移开视线哦。' },
+      { audio:'./assets/voice/xien/brag_01.mp3', text:'看，这种球我还是拿得稳的。' },
+      { audio:'./assets/voice/xien/brag_02.mp3', text:'那我就，瞄准那颗。' },
+    ],
+    // brag_streak 席恩连续进球（≥2颗，一口气清球）（1条）
+    brag_streak: [
+      { audio:'./assets/voice/xien/brag_streak_01.mp3', text:'因为我刚才那一杆失误，所以要一口气解决掉所有球是吧。' },
     ],
     // on_win 席恩终局赢（2条）
     on_win: [
-      { audio:'./assets/voice/xien/on_win_01.mp3', text:'承蒙关照，是我险胜了。' },
-      { audio:'./assets/voice/xien/on_win_02.mp3', text:'我赢了，今晚的睡前故事就由我为您挑。' },
+      { audio:'./assets/voice/xien/on_win_01.mp3', text:'我赢了，今晚的睡前故事就由我为您挑。' },
+      { audio:'./assets/voice/xien/on_win_02.mp3', text:'承蒙关照，是我险胜了。' },
     ],
     // on_lose 席恩终局输（2条）
     on_lose: [
@@ -386,18 +396,22 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xien/pfoul_empty_01.mp3', text:'白球……它大概舍不得离开您。' },
       { audio:'./assets/voice/xien/pfoul_empty_02.mp3', text:'空杆而已，没事的～' },
     ],
-    // pfoul_other 玩家其它犯规（3条）
+    // pfoul_other 玩家其它犯规：碰错球 / 母球落袋（3条）
     pfoul_other: [
       { audio:'./assets/voice/xien/pfoul_other_01.mp3', text:'唔……犯规了。' },
       { audio:'./assets/voice/xien/pfoul_other_02.mp3', text:'碰错球了……' },
-      { audio:'./assets/voice/xien/pfoul_other_03.mp3', text:'……有些莽撞了。' },
+      { audio:'./assets/voice/xien/pfoul_other_03.mp3', text:'白球落袋，可是要给对手加分的机会呢。' },
     ],
-    // on_bot_foul 席恩自己犯规（4条）
+    // chat 空档寒暄：换手的间隙随机暖场（低频，不与行为语音抢）（4条）
+    chat: [
+      { audio:'./assets/voice/xien/chat_01.mp3', text:'您平时经常打桌球吗？感觉您挺熟练的呢。' },
+      { audio:'./assets/voice/xien/chat_02.mp3', text:'您只是想单纯地享受游戏的乐趣，对吧。' },
+      { audio:'./assets/voice/xien/chat_03.mp3', text:'请尽情发挥，让我见识一下您的实力。' },
+      { audio:'./assets/voice/xien/chat_04.mp3', text:'除了桌球，您还会想和我玩什么其他游戏吗？' },
+    ],
+    // on_bot_foul 席恩自己犯规（1条）
     on_bot_foul: [
-      { audio:'./assets/voice/xien/on_bot_foul_01.mp3', text:'我也犯规了呢。' },
-      { audio:'./assets/voice/xien/on_bot_foul_02.mp3', text:'一时分了神，在想该给您备什么茶。' },
-      { audio:'./assets/voice/xien/on_bot_foul_03.mp3', text:'是我莽撞了。' },
-      { audio:'./assets/voice/xien/on_bot_foul_04.mp3', text:'这杆怪我，下回我会认真些。' },
+      { audio:'./assets/voice/xien/on_bot_foul_01.mp3', text:'一时分了神，在想该给您备什么茶。' },
     ],
   }
 };
@@ -674,11 +688,13 @@ const Character = (() => {
    *   - bubble {boolean}      语音没播时（概率没中/被冷却挡下/该类无语音）退化为文字气泡（默认 true）
    *   - force {boolean}       忽略所有冷却（终局等关键时刻必出语音+字幕）
    */
+  // 返回值：本次是否"真的说了话"(播了语音或弹了气泡)。false = 被冷却/概率挡下，
+  // 调用方可据此决定是否退化到寒暄(chat)填补空档。
   function say(category, mood = 'idle', opts = {}){
     const id = State.botProfile && State.botProfile.id;
-    if (!id) return;
+    if (!id) return false;
     // 任意有立绘素材的 bot 都可触发（小麦/席恩…）；无素材的 bot 静默
-    if (!(State.botProfile.avatars)) return;
+    if (!(State.botProfile.avatars)) return false;
 
     const { voiceChance = 1, bubble = true, force = false } = opts;
 
@@ -691,7 +707,7 @@ const Character = (() => {
       const clip = pickNoRepeat(clips, id + ':v:' + category);
       if (playClip(clip, force)){
         showBubble(clip.text, 4400, force);
-        return;
+        return true;
       }
     }
 
@@ -700,8 +716,9 @@ const Character = (() => {
       // 优先用台词库；没有对应分类则回退到 VOICE_CLIPS 的字幕文本
       let lines = (VOICE_LINES[id] && VOICE_LINES[id][category]) || [];
       if (!lines.length && clips.length) lines = clips.map(c => c.text);
-      if (lines.length) showBubble(pickNoRepeat(lines, id + ':t:' + category), 3400, force);
+      if (lines.length) return showBubble(pickNoRepeat(lines, id + ':t:' + category), 3400, force);
     }
+    return false;
   }
 
   function toggleMute(){ _muted = !_muted; if (_muted && _audio){ _audio.pause(); } return _muted; }
@@ -810,7 +827,8 @@ function makeBallBody(x, y){
     frictionAir:   PHYS.frictionAir,
     density:        PHYS.density,
     label:          'ball',
-    slop:           0.02
+    slop:           0.02,
+    bullet:         true   // 连续碰撞检测：防止高速母球一帧穿过目标球(隧穿)导致漏判碰撞
   });
 }
 
@@ -1761,6 +1779,27 @@ function resolveShot(){
   const pocketedEight = pockets.some(b => b.num === 8);
   const cuePocketed = State.balls[0].pocketed;
 
+  // —— 修复：高速球"隧穿"导致漏记 firstContact ——
+  // 席恩强化后出杆很猛，母球可能在一帧内穿过目标球直接进袋，
+  // collisionStart 没来得及触发 → firstContact 为空 → 误判"空杆"。
+  // 补救：若本杆有非母球落袋 / 有球被撞记录 / 有库边碰撞，则绝不是真空杆。
+  if (!ctx.firstContact){
+    const pottedNonCue = pockets.filter(b => b.id !== 'cue' && b.type !== 'cue');
+    if (pottedNonCue.length){
+      // 有球进袋 → 母球必然先撞到了它（取进袋球里最合理的一颗当首碰）
+      // 优先取出杆者花色的球；没有则取第一颗进袋球
+      ctx.firstContact =
+        pottedNonCue.find(b => shooterGroup && b.type === shooterGroup)
+        || pottedNonCue.find(b => b.num !== 8)
+        || pottedNonCue[0];
+    } else if (ctx.contacted && ctx.contacted.size){
+      // 没进球但有碰撞记录（firstContact 漏了但 contacted 抓到了）→ 用它兜底
+      const firstId = [...ctx.contacted][0];
+      const fb = State.balls.find(b => b.id === firstId);
+      if (fb) ctx.firstContact = fb;
+    }
+  }
+
   // ===== 文案主角（绝对视角，分清"谁") =====
   // me = true  → 出杆者是玩家（你）
   // me = false → 出杆者是 bot（小麦）
@@ -1894,18 +1933,34 @@ function resolveShot(){
   } else if (pocketedOwn){
     // 进了自己球 → 续杆
     State.runStreak[sideKey] += 1;
+    const streak = State.runStreak[sideKey];
     showToast(`${shooterName}进球了，继续击球`, 'ok');
-    // 玩家进球 → 夸赞；小麦进球 → 得瑟"送分"(brag)
-    if (me) Character.say('praise', 'happy', { voiceChance:0.6 });
-    else    Character.say('brag',   'smug',  { voiceChance:0.6 });
+    // 连续进球(≥2颗)有专属"连击"语音；否则普通进球语音
+    if (me){
+      // 玩家进球 → 夸赞；玩家连续进球 → 局势倾斜(praise_streak)
+      if (streak >= 2) Character.say('praise_streak', 'pout', { voiceChance:0.7 });
+      else             Character.say('praise', 'happy', { voiceChance:0.6 });
+    } else {
+      // 席恩进球 → 得意(brag)；席恩连续进球 → 一口气清台(brag_streak)
+      if (streak >= 2) Character.say('brag_streak', 'smug', { voiceChance:0.7 });
+      else             Character.say('brag', 'smug', { voiceChance:0.6 });
+    }
     continueTurn(me ? 'me' : 'bot');
   } else {
     // 没进球（没犯规，单纯打丢）→ 换手
     State.runStreak[sideKey] = 0;
     showToast(`现在${nextTurnTip}`, 'info');
-    // 玩家打丢 → 嘲讽"这都能打丢"(taunt)；小麦自己打丢 → 自嘲撒娇(cute，不夸玩家)
-    if (me) Character.say('taunt', 'smug', { voiceChance:0.4 });
-    else    Character.say('cute',  'cute', { voiceChance:0.4 });
+    // 玩家打丢 → 打趣(taunt)；席恩自己打丢 → 自嘲(cute)
+    // 少数情况下（语音没触发时）用寒暄(chat)暖场，填补空档
+    if (me){
+      if (!Character.say('taunt', 'smug', { voiceChance:0.4 })){
+        Character.say('chat', 'idle', { voiceChance:0.25, bubble:false });
+      }
+    } else {
+      if (!Character.say('cute', 'cute', { voiceChance:0.4 })){
+        Character.say('chat', 'idle', { voiceChance:0.25, bubble:false });
+      }
+    }
     switchTurn(me ? 'bot' : 'me');
   }
 }
@@ -2310,7 +2365,7 @@ function buildSummaryText(kind){
     const botLeft  = State.oppGroup ? State.balls.filter(b=>b.type===State.oppGroup && !b.pocketed && b.num!==8).length : '未定';
     const eightAlive = !State.balls.find(b=>b.num===8 && b.pocketed);
     return [
-      `用户与${botName}（bot_id: ${bot.id}）于 ${dateStr} ${timeStr} 开始「skill-pool」美式8球桌球对局。`,
+      `用户与${botName}于 ${dateStr} ${timeStr} 开始「skill-pool」美式8球桌球对局。`,
       ``,
       `对局进行到第 ${State.shotHistory.length} 杆时中断（用户离开页面）。当前比分：用户清袋 ${userPocketed}/7，${botName}清袋 ${botPocketed}/7。`,
       ``,
@@ -2328,7 +2383,7 @@ function buildSummaryText(kind){
   // 结束
   const outcomeDesc = State.result === 'win' ? '用户获胜！' : '用户落败。';
   return [
-    `用户与${botName}（bot_id: ${bot.id}）于 ${dateStr} ${timeStr} 进行了一局「skill-pool」美式8球桌球对局。`,
+    `用户与${botName}于 ${dateStr} ${timeStr} 进行了一局「skill-pool」美式8球桌球对局。`,
     ``,
     `${outcomeDesc}${State._endReason ? '（'+State._endReason+'）' : ''} 共进行了 ${State.shotHistory.length} 杆。`,
     ``,
