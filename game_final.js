@@ -236,9 +236,6 @@ const VOICE_LINES = {
       '我觉得……是这张桌子对我有些许偏见。',
       '咳，就当我在自娱自乐吧。',
       '罕见地手滑了，您就当没看见好不好。',
-      '失误归失误，下一杆我会认真的。',
-      '呃……看来我的球技还不够稳定。',
-      '看来我还需要多加练习呢。',
     ],
     praise: [
       '这球打得漂亮，看来是要乘胜追击了？',
@@ -249,13 +246,13 @@ const VOICE_LINES = {
     // 玩家连续进球（≥2颗）
     praise_streak: [
       '看来胜负的天平，要向您倾斜了呢。',
-      '看来这场比赛的胜利，注定属于您了。',
     ],
     brag: [
       '看，这种球我还是拿得稳的。',
+      '看来我还需要多加练习呢。',
+      '您平时经常打桌球吗？感觉您挺熟练的呢。',
     ],
     on_win: [
-      '我赢了，今晚的睡前故事就由我为您挑。',
       '承蒙关照，是我险胜了。',
     ],
     on_lose: [
@@ -273,10 +270,11 @@ const VOICE_LINES = {
     ],
     on_bot_foul: [
       '一时分了神，在想该给您备什么茶。',
+      '失误归失误，下一杆我会认真的。',
+      '呃……看来我的球技还不够稳定。',
     ],
     // 空档寒暄（换手间隙暖场）
     chat: [
-      '您平时经常打桌球吗？感觉您挺熟练的呢。',
       '您只是想单纯地享受游戏的乐趣，对吧。',
       '请尽情发挥，让我见识一下您的实力。',
       '除了桌球，您还会想和我玩什么其他游戏吗？',
@@ -344,14 +342,11 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xien/taunt_04.mp3', text:'看起来力度不够呢。' },
       { audio:'./assets/voice/xien/taunt_05.mp3', text:'哎呀，您这是在故意示弱吗？' },
     ],
-    // cute 席恩自己打丢没进（6条）
+    // cute 席恩自己打丢没进（3条）
     cute: [
       { audio:'./assets/voice/xien/cute_01.mp3', text:'我觉得……是这张桌子对我有些许偏见。' },
       { audio:'./assets/voice/xien/cute_02.mp3', text:'咳，就当我在自娱自乐吧。' },
       { audio:'./assets/voice/xien/cute_03.mp3', text:'罕见地手滑了，您就当没看见好不好。' },
-      { audio:'./assets/voice/xien/cute_04.mp3', text:'失误归失误，下一杆我会认真的。' },
-      { audio:'./assets/voice/xien/cute_05.mp3', text:'呃……看来我的球技还不够稳定。' },
-      { audio:'./assets/voice/xien/cute_06.mp3', text:'看来我还需要多加练习呢。' },
     ],
     // praise 玩家进球/打出好杆（4条，含从 taunt 移来的惊讶夸赞）
     praise: [
@@ -360,18 +355,18 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xien/praise_03.mp3', text:'这一球，我没想到能这样打诶。' },
       { audio:'./assets/voice/xien/praise_04.mp3', text:'这可真是意外之喜呢。' },
     ],
-    // praise_streak 玩家连续进球（≥2颗，乘胜/局势倾斜）（2条）
+    // praise_streak 玩家连续进球（≥2颗，局势倾斜）（1条）
     praise_streak: [
       { audio:'./assets/voice/xien/praise_streak_01.mp3', text:'看来胜负的天平，要向您倾斜了呢。' },
-      { audio:'./assets/voice/xien/praise_streak_02.mp3', text:'看来这场比赛的胜利，注定属于您了。' },
     ],
-    // brag 席恩自己进球（1条）
+    // brag 席恩自己进球（3条）
     brag: [
       { audio:'./assets/voice/xien/brag_01.mp3', text:'看，这种球我还是拿得稳的。' },
+      { audio:'./assets/voice/xien/brag_02.mp3', text:'看来我还需要多加练习呢。' },
+      { audio:'./assets/voice/xien/brag_03.mp3', text:'您平时经常打桌球吗？感觉您挺熟练的呢。' },
     ],
-    // on_win 席恩终局赢（2条）
+    // on_win 席恩终局赢（1条）
     on_win: [
-      { audio:'./assets/voice/xien/on_win_01.mp3', text:'我赢了，今晚的睡前故事就由我为您挑。' },
       { audio:'./assets/voice/xien/on_win_02.mp3', text:'承蒙关照，是我险胜了。' },
     ],
     // on_lose 席恩终局输（2条）
@@ -390,16 +385,17 @@ const VOICE_CLIPS = {
       { audio:'./assets/voice/xien/pfoul_other_02.mp3', text:'碰错球了……' },
       { audio:'./assets/voice/xien/pfoul_other_03.mp3', text:'白球落袋，可是要给对手加分的机会呢。' },
     ],
-    // chat 空档寒暄：换手的间隙随机暖场（低频，不与行为语音抢）（4条）
+    // chat 空档寒暄：换手的间隙随机暖场（低频，不与行为语音抢）（3条）
     chat: [
-      { audio:'./assets/voice/xien/chat_01.mp3', text:'您平时经常打桌球吗？感觉您挺熟练的呢。' },
       { audio:'./assets/voice/xien/chat_02.mp3', text:'您只是想单纯地享受游戏的乐趣，对吧。' },
       { audio:'./assets/voice/xien/chat_03.mp3', text:'请尽情发挥，让我见识一下您的实力。' },
       { audio:'./assets/voice/xien/chat_04.mp3', text:'除了桌球，您还会想和我玩什么其他游戏吗？' },
     ],
-    // on_bot_foul 席恩自己犯规（1条）
+    // on_bot_foul 席恩自己犯规（3条）
     on_bot_foul: [
       { audio:'./assets/voice/xien/on_bot_foul_01.mp3', text:'一时分了神，在想该给您备什么茶。' },
+      { audio:'./assets/voice/xien/on_bot_foul_02.mp3', text:'失误归失误，下一杆我会认真的。' },
+      { audio:'./assets/voice/xien/on_bot_foul_03.mp3', text:'呃……看来我的球技还不够稳定。' },
     ],
   }
 };
@@ -2426,7 +2422,6 @@ const GAMEOVER_COMMENTS_BY_BOT = {
     // 用户输（席恩获胜=on_win）—— 与语音对齐
     lose: [
       '承蒙关照，是我险胜了。',
-      '我赢了，今晚的睡前故事就由我为您挑。',
     ],
   },
 };
